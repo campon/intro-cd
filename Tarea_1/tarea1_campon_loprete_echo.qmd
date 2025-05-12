@@ -18,6 +18,7 @@ execute::
 
 
 ```{python}
+#| echo: false
 from time import time
 from pathlib import Path
 
@@ -40,9 +41,10 @@ sns.set_theme(style="whitegrid")
 ## Parte 1: Cargado y Limpieza de datos
 
 ```{python}
+#| echo: false
 df_speeches = pd.read_csv('../data/us_2020_election_speeches.csv')
 
-df_speeches
+#df_speeches
 ```
 
 # A) Datos faltantes
@@ -63,6 +65,7 @@ Para seleccionar esta categoría de discursos, primero se realiza un análisis d
 Para verificar la calidad de los datos, realizamos una visualización manual en busca de datos incompletos, datos inconsistentes, datos con ruido que probablemente sean provenientes de una mala producción y/o procesamiento de los mismos. La busqueda no arroja mala calidad de los mismos, resultando haber una buena calidad de los mismos.
 
 ```{python}
+#| echo: false
 # visualizamos los datos faltantes por variable
 n = len(df_speeches)
 count = df_speeches.count()
@@ -77,12 +80,15 @@ n_count_df.columns = ['Variable', 'Cantidad de Nulos']
 ```
 
 ```{python}
+#| echo: false
 
 #df_speeches.dtypes
 #df_speeches.describe()
 ```
 
 ```{python}
+#| echo: false
+
 df_speeches["date"] = pd.to_datetime(df_speeches["date"])
 
 def get_var_category(series):
@@ -105,6 +111,8 @@ def print_categories(df):
 ```
 
 ```{python}
+#| echo: false
+
 # how many types and obs are? creamos tabla con los tipos de discurso
 type_counts = df_speeches["type"].value_counts().reset_index()
 type_counts.columns = ["Tipo de Discurso", "Cantidad"]
@@ -425,7 +433,7 @@ top_speeches["WordList"] = top_speeches["CleanText"].str.split()
 
 ```
 
-Para normalizar el texto realizamos unas pequeñas modificaciones en la función de \texttt{clean_text()}, agregamos una sentencia que elimina los signos de puntuacion definidos y los reemplaza por espacios. Específicamente, eliminamos los caracteres: \[ \] , : ? . ! ; " ', además de saltos de línea (\\n), usando una expresión regular. Este proceso nos permite limpiar el texto antes de realizar análisis de texto.
+Para normalizar el texto realizamos unas pequeñas modificaciones en la función de $\texttt{clean\_text()}$, agregamos una sentencia que elimina los signos de puntuacion definidos y los reemplaza por espacios. Específicamente, eliminamos los caracteres: \[ \] , : ? . ! ; " ', además de saltos de línea (\\n), usando una expresión regular. Este proceso nos permite limpiar el texto antes de realizar análisis de texto.
 
 # Parte 2\)
 ## Parte A\)
