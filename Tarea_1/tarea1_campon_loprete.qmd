@@ -1,12 +1,16 @@
 ---
-title: Tarea 1
+title: Análisis de Discursos Políticos de la Campaña Presidencial de Estados Unidos 2020
+subtitle: Tarea 1, Introducción a la Ciencia de Datos, FING 2025
+author: Ignacio Campon y Mauro Loprete
 jupyter: python3
+execute:
+  echo: false
+  message: false
+  warning: false
+format: pdf
+lang: es
+
 ---
-
-
-## Introducción a la Ciencia de Datos 2025
-
-### Ignacio Campón & Mauro Loprete
 
 
 ```{python}
@@ -30,28 +34,27 @@ import nltk
 sns.set_theme(style="whitegrid")
 ```
 
-## Parte 1: Cargado y Limpieza de datos
 
 ```{python}
 df_speeches = pd.read_csv('../data/us_2020_election_speeches.csv')
-
-#df_speeches
 ```
 
-# A) Datos faltantes
 
-En este trabajo se analizan diferentes discursos políticos de la campaña presidencial de 2020 en Estados Unidos. 
+En el presente trabajo se analizan distintos discursos políticos correspondientes a la campaña presidencial de Estados Unidos en el año 2020.
 
-La base de datos utilizada contiene un total de 269 observaciones y 6 variables que incluyen discursos de campaña, discursos en ayuntamientos, entrevistas, debates y otros eventos. Los discursos están clasificados por orador, título, contenido hablado, fecha, localidad y tipo de discurso. En particular, el análisis se centrará en los discursos de campaña política, con énfasis en los 5 principales oradores seleccionados según la mayor frecuencia de discursos.
+La base de datos empleada contiene un total de 269 observaciones y 6 variables, que incluyen discursos de campaña, presentaciones en ayuntamientos, entrevistas, debates y otros eventos. Los discursos se encuentran clasificados según orador, título, contenido, fecha, localidad y tipo de discurso. El análisis se centra particularmente en los discursos de campaña política, poniendo énfasis en los cinco oradores con mayor frecuencia de participación.
 
-Para identificar esta categoría de discursos, primero se realiza un análisis de los datos faltantes en la base. Las variables disponibles se clasifican en tres tipos principales: 
-- **Categóricas**: *speaker* (nombre del orador), *type* (tipo de discurso) y *location* (ciudad y estado donde se realizó el discurso).
-- **Texto**: *title* (título del discurso) y *text* (contenido del discurso).
-- **Fecha**: *date* (fecha del discurso en formato año/mes/día).
+Para identificar esta categoría de discursos, se realiza en primer lugar un análisis de los datos faltantes presentes en la base. Las variables disponibles se agrupan en tres tipos principales:  
+- **Categóricas**: *speaker* (nombre del orador), *type* (tipo de discurso) y *location* (ciudad y estado donde se realizó el discurso).  
+- **Texto**: *title* (título del discurso) y *text* (contenido del discurso).  
+- **Fecha**: *date* (fecha del discurso en formato año/mes/día).  
 
-Los datos faltantes por variable se describen en la tabla **__**.
+La cantidad de datos faltantes por variable se detalla en la [@fig-missing-data].
+
 
 ```{python}
+#| label: fig-missing-data
+#| fig-cap: Distribución de Datos Faltantes por Variable
 # visualizamos los datos faltantes por variable
 n = len(df_speeches)
 count = df_speeches.count()
@@ -88,9 +91,10 @@ nulos_df["Porcentaje"] = nulos_df["Cantidad de Nulos"] / n
 )
 ```
 
-Solo se encuentran datos faltantes en las variables *speaker*, *location* y *type*. En particular, la variable *speaker* tiene 3 datos faltantes, *location* tiene 18 datos faltantes y *type* tiene 21 dato faltantes. Tras filtrar y quedarnos con los discursos de campaña, los datos faltantes que permanecen son 1 en *speaker* y 4 en *loaction*, esto no genera mayores consecuencias ya que no se perderá información relevante. En cuanto a la variable *type*, al filtrar por discursos de campaña, no quedan datos faltantes.
+Se identifican datos faltantes únicamente en las variables *speaker*, *location* y *type*. En particular, la variable *speaker* presenta 3 observaciones incompletas, *location* cuenta con 18 datos faltantes, y *type* registra 21 valores ausentes. Luego de aplicar un filtrado para conservar únicamente los discursos de campaña, los datos faltantes remanentes corresponden a 1 observación en *speaker* y 4 en *location*. Esta situación no genera consecuencias relevantes, dado que no se pierde información significativa. En cuanto a la variable *type*, el filtrado por discursos de campaña elimina completamente los datos faltantes.
 
-Para verificar la calidad de los datos, realizamos una visualización manual en busca de datos incompletos, datos inconsistentes, datos con ruido que probablemente sean provenientes de una mala producción y/o procesamiento de los mismos. La búsqueda no arroja mala calidad de los mismos, resultando haber una buena calidad de los mismos.
+Para verificar la calidad de los datos, se realiza una inspección manual con el objetivo de detectar posibles registros incompletos, inconsistentes o con ruido, probablemente atribuibles a errores en la producción y/o procesamiento de la información. Como resultado, no se identifican problemas significativos, por lo que se considera que la calidad de los datos es adecuada.
+
 
 ```{python}
 
@@ -121,6 +125,7 @@ def print_categories(df):
 ```
 
 ```{python}
+
 # creamos tabla con los tipos de discurso
 type_counts = df_speeches["type"].value_counts().reset_index()
 type_counts.columns = ["Tipo de Discurso", "Cantidad"]
@@ -128,9 +133,11 @@ type_counts.columns = ["Tipo de Discurso", "Cantidad"]
 #print(tabulate(type_counts, headers="keys", tablefmt="github", showindex=False))
 ```
 
-La cantidad de observaciones por type de discurso se resume en la tabla **__**. Se observa que 180 de las 269 observaciones, lo que representa un 72.6%, corresponden a discursos de campaña. Estos serán la base principal para nuestro análisis.
+La cantidad de observaciones según el tipo de discurso se resume en la [@fig-type-counts]. Se observa que 180 de las 269 observaciones, lo que representa un 72,6 %, corresponden a discursos de campaña. Estas observaciones constituyen la base principal del análisis.
 
 ```{python}
+#| label: fig-type-counts
+#| fig-cap: Cantidad de Discursos por Tipo
 conteos = df_speeches["type"].value_counts().reset_index()
 conteos.columns = ["type", "count"]
 conteos["percentage"] = conteos["count"] / conteos["count"].sum()
@@ -161,7 +168,8 @@ conteos_total = pd.concat([conteos, total_row], ignore_index=True)
 )
 ```
 
-Los discursos de campaña abarcan un período que va desde el 15 de enero de 2020 hasta el 16 de octubre de 2020. La mediana de las fechas se sitúa a finales de agosto, lo que indica que la mayoría de los discursos se concentran en los últimos meses de la campaña.
+Los discursos de campaña abarcan un período comprendido entre el 15 de enero de 2020 y el 16 de octubre de 2020. La mediana de las fechas se sitúa a finales de agosto, lo que sugiere una mayor concentración de discursos en los últimos meses del período analizado.
+
 
 ```{python}
 #df_speeches.describe()
@@ -307,11 +315,13 @@ plt.tight_layout()
 plt.show()
 ```
 
-Los 5 candidatos con mas discursos de campaña representan el 65\% de todos los discursos registrados y se componen por los oradores Kamala Harris, Bernie Sanders, Mike Pence, Donald Trump y Joe Biden, dejando de lado 53 oradores que componen el 35\% restante de discursos registrados. En base a los discursos de estos 5 candidatos realizaremos el análisis de aquí en más.
+Los cinco candidatos con mayor cantidad de discursos de campaña concentran el 65% del total de discursos registrados. Estos oradores son Kamala Harris, Bernie Sanders, Mike Pence, Donald Trump y Joe Biden. El 35% restante corresponde a 53 oradores con menor frecuencia de aparición. A partir de este punto, el análisis se basará exclusivamente en los discursos pronunciados por estos cinco candidatos.
+
 
 # B) Gráfica para visualizar discursos de los candidatos por año
 
-Si consideramos los discursos a lo largo del tiempo podemos identificar momentos clave de campaña de los mismos, para ello construimos la figura **__** que constituye un gráfico de líneas y puntos a lo largo de un eje temporal.
+Al observar la distribución temporal de los discursos, es posible identificar momentos clave dentro del desarrollo de la campaña. Para ello, se construye la figura **__**, que consiste en un gráfico de líneas y puntos representados sobre un eje temporal.
+
 
 ```{python}
 
@@ -343,9 +353,12 @@ plt.tight_layout()
 plt.show()
 ```
 
-Como se puede ver en la figura anterior, la campaña de los candidatos arranca en Enero 2020, con pocos discursos mensuales, no más de 5. En Abril se observa como la cantidad de discursos de Bernie bajan a 0, lo cual coincide con su anuncio de retirada de la campaña y su apoyo a Joe Biden por parte del partido Demócrata de EE.UU. por eso se explica que se visualiza un único discurso de este candidato en los últimos 3 meses de campaña. Por otro lado, en Julio se observa el inicio de camapaña de Kamala Harris y posteriormente en Agosto su anuncio de formula presidencial junto a Joe Biden como presidente. En Septiembre se alcanza el pico de discursos de los 2 candidatos principales a preseidente de los EE.UU. producto del debate presidencial que es trasmitido en todo el país y la llegada de las elecciones en el mes siguiente. 
+Tal como se observa en la figura anterior, la campaña de los candidatos comienza en enero de 2020 con una frecuencia baja, registrándose no más de cinco discursos por mes. En abril, la cantidad de discursos de Bernie Sanders desciende a cero, lo que coincide con el anuncio de su retiro de la campaña y su respaldo a Joe Biden por parte del Partido Demócrata de Estados Unidos. Esto explica que se registre un único discurso de este candidato en los últimos tres meses del período analizado. 
 
-La figura **__** muestra los discursos mensuales de las formulas presidenciales, este gráfico muestra de forma agregada los discursos de Joe Biden \& Kamala Harris y Donald Trump \& Mike Pence; obsérvese como en Julio comienza a incrementarse la cantidad de discursos por fórmula.
+Por otra parte, en julio se identifica el inicio de la campaña de Kamala Harris y, posteriormente, en agosto, el anuncio de su integración a la fórmula presidencial junto a Joe Biden. En septiembre se alcanza el pico en la cantidad de discursos pronunciados por los dos principales candidatos a la presidencia de Estados Unidos, en el contexto del debate presidencial televisado a nivel nacional y la proximidad de las elecciones en el mes siguiente.
+
+La figura **__** presenta la cantidad mensual de discursos por fórmula presidencial. En este gráfico se agregan los discursos de Joe Biden & Kamala Harris, por un lado, y de Donald Trump & Mike Pence, por otro. Se observa un incremento en la frecuencia de discursos por fórmula a partir del mes de julio.
+
 
 ```{python}
 # creamos las fórmulas presidenciales
@@ -435,12 +448,16 @@ top_speeches["WordList"] = top_speeches["CleanText"].str.split()
 
 ```
 
-Para normalizar el texto realizamos unas pequeñas modificaciones en la función de $\texttt{clean\_text()}$, agregamos los nombre de los candidatos, dado que nos dimos cuenta que en el texto del discurso se menciona el nombre y apellido del orador junto a dos puntos, ej. "Donald Trump:" esto generaba que los discursos de un mismo candidato tenga la aparición de su nombre y apellido repetitivamente por lo tanto se eliminan luego de convertir a minúsculas todo el texto, las frases: joe biden: donald trump: kamala harris: mike pence: bernie sanders: president trump: incluir los dos puntos junto al nombre y apellido, nos asegura no eliminar menciones que hace un orador sobre otro candidato. Adicionlamente agregamos otra sentencia que elimina los signos de puntuacion definidos y los reemplaza por espacios. Específicamente, eliminamos los caracteres: \[ \] , : ? . ! ; " ', además de saltos de línea (\\n), usando una expresión regular. Este proceso nos permite limpiar el texto antes de realizar análisis de texto.
+Para normalizar el texto, se realizaron modificaciones menores a la función $\texttt{clean\_text()}$. Se incorporaron los nombres de los candidatos, ya que se detectó que en los discursos el nombre y apellido del orador suelen aparecer seguidos de dos puntos (por ejemplo, "Donald Trump:"), lo cual generaba repeticiones innecesarias en el contenido textual de un mismo candidato. Por este motivo, luego de convertir todo el texto a minúsculas, se eliminan las siguientes frases: joe biden:, donald trump:, kamala harris:, mike pence:, bernie sanders:, president trump:. La inclusión de los dos puntos junto al nombre y apellido garantiza que no se eliminen menciones realizadas por un orador hacia otro candidato.
+
+Adicionalmente, se incorporó una sentencia para eliminar signos de puntuación específicos, reemplazándolos por espacios. En particular, se eliminaron los caracteres: \[ \], ,, :, ?, ., !, ;, ", ', así como también los saltos de línea (\\n), utilizando una expresión regular. Este proceso permite limpiar el texto de manera adecuada antes de aplicar técnicas de análisis textual.
+
 
 # Parte 2\)
 ## Parte A\)
 
-Los candidatos durante sus discursos utilizan un vocabulario similar, y ciertas palabras presentan una frecuencia mayor entre los mismos. En la figura **__** se observan las palabras mas frecuentes mencionadas en los discursos por candidatos.
+Durante sus discursos, los candidatos utilizan un vocabulario similar, y ciertas palabras presentan una frecuencia más alta entre ellos. En la figura **__** se presentan las palabras más frecuentes mencionadas en los discursos de los candidatos.
+
 
 ```{python}
 
@@ -534,7 +551,8 @@ plt.show()
 
 ```
 
-Obsérvese que las 20 palabras más frecuentes en los discursos de todos los candidatos son mencionadas con mayor frecuencia por el orador Donald Trump. Esto podría indicar que los discursos de este candidato son más homogéneos entre sí en comparación con los de los demás oradores. Al agrupar las palabras más frecuentes por fórmula presidencial, se observa un patrón similar (véase la figura **__**), lo que permite identificar diferencias entre los discursos de los candidatos de los distintos partidos políticos. Si se analizaran las diferencias en los lugares y fechas de los discursos, sería posible generar listas de las localidades más visitadas por los candidatos, así como de los meses en los que se realizaron la mayor cantidad de discursos (véase la figura **__**).
+Se observa que las 20 palabras más frecuentes en los discursos de todos los candidatos son mencionadas con mayor frecuencia por el orador Donald Trump. Esto podría sugerir que los discursos de este candidato son más homogéneos en comparación con los de los demás oradores. Al agrupar las palabras más frecuentes por fórmula presidencial, se identifica un patrón similar (véase la figura **__**), lo que permite distinguir diferencias entre los discursos de los candidatos de los distintos partidos políticos. Si se analizaran las diferencias en los lugares y fechas de los discursos, sería posible generar listas con las localidades más visitadas por los candidatos, así como los meses en los que se registró la mayor cantidad de discursos (véase la figura **__**).
+
 
 ```{python}
 # imprimir el primer discurso de trump en top_speeches, buscamos las menciones del orador y ver si fueron filtradas
@@ -573,11 +591,13 @@ plt.tight_layout()
 plt.show()
 ```
 
-Hay muchas palabras que utilizan unicamente las propias formulas, por ejemplo Donald y Mike utilizan un vocabulario "great", "years", "dont't", "right", "want" que Joe y Kamala no utilizan. Esto puede ser un indicativo de que los discursos de los candidatos son diferentes entre sí, y que existen distintas posturas políticas entre los mismos. Joe y Kamala utilizan palabras como "thank", "i'm", "get", "make", "back", "country" que no son utilizadas por la formula Trump-Pence, observamos un tipo de discurso mas inivididualista por el uso de la palabra "i'm" por parte de Joe y Kamala, mientras que la formula Trump-Pence utiliza un vocabulario más colectivo por el uso de "we're".
+Existen numerosas palabras que son utilizadas exclusivamente por cada fórmula presidencial. Por ejemplo, Donald Trump y Mike Pence emplean vocabulario como "great", "years", "don't", "right", "want", que no son utilizados por Joe Biden y Kamala Harris. Esto podría indicar que los discursos de los candidatos son distintos entre sí, reflejando diferencias en sus posturas políticas. Por otro lado, Joe Biden y Kamala Harris utilizan palabras como "thank", "i'm", "get", "make", "back", "country", las cuales no son empleadas por la fórmula Trump-Pence. Se observa un tipo de discurso más individualista en el uso de la palabra "i'm" por parte de Joe y Kamala, mientras que la fórmula Trump-Pence utiliza un vocabulario más colectivo con la expresión "we're".
+
 
 ## Parte B\)
 
-Al buscar las palabras mas frecuntes por candidatos, como ya comentamos, nos encontramos con un problema particular de que los propios candidatos se mencionan asi mismos con gran frecuencia, un patrón que se repetía en los 5 candidatos. Para resolver esto, decidimos filtrar las frases de los discrusos que mencionan al orador en el discurso lo cual causaba que los nombres de los mismos candidatos aparecieran con gran frecuencia.  
+Al analizar las palabras más frecuentes por candidato, se identificó un problema particular: los propios candidatos se mencionan a sí mismos con gran frecuencia, un patrón que se repetía en los cinco oradores. Para resolver esta situación, se decidió filtrar las frases de los discursos que mencionan al orador, lo que eliminó la aparición frecuente de los nombres de los propios candidatos.
+ 
 
 ## Parte C\)
 
@@ -630,9 +650,10 @@ plt.tight_layout()
 plt.show()
 ```
 
-La figura _ muestra una matriz de menciones entre los candidatos. Las filas representan a los candidatos y las columnas indican las menciones hacia ellos. Para construir esta matriz, se elaboró una lista con los nombres de los candidatos y se contabilizaron las menciones de cada uno en los discursos de los demás. Por ejemplo, en los discursos de Donald Trump se buscaron menciones a Joe, a Biden y al nombre completo, siendo estas categorías excluyentes entre sí.
+La figura _ presenta una matriz de menciones entre los candidatos. Las filas representan a los candidatos y las columnas indican las menciones dirigidas hacia ellos. Para construir esta matriz, se elaboró una lista con los nombres de los candidatos y se contabilizaron las menciones de cada uno en los discursos de los demás. Por ejemplo, en los discursos de Donald Trump se buscaron menciones a Joe, a Biden y al nombre completo, siendo estas categorías excluyentes entre sí.
 
-La diagonal principal de la matriz refleja la cantidad de veces que un candidato se menciona a sí mismo, mientras que el resto de la matriz muestra las menciones hacia otros candidatos. Se observa que Donald Trump y Joe Biden son quienes más se mencionan mutuamente, lo cual es lógico dado que fueron los principales opositores. Donald Trump es el candidato que más menciona al resto de los integrantes del top 5 de oradores. Por otro lado, Bernie Sanders es el único candidato que no menciona a los demás dentro del top 5, en particular a Mike Pence, y es también quien realiza menos menciones en general.
+La diagonal principal de la matriz refleja la cantidad de veces que un candidato se menciona a sí mismo, mientras que el resto de la matriz muestra las menciones hacia otros candidatos. Se observa que Donald Trump y Joe Biden son los que más se mencionan mutuamente, lo cual es lógico dado que fueron los principales opositores. Donald Trump es el candidato que más menciona a los demás integrantes del top 5 de oradores. Por otro lado, Bernie Sanders es el único candidato que no menciona a los demás dentro del top 5, en particular a Mike Pence, y es también quien realiza menos menciones en general.
+
 
 
 ```{python}
@@ -645,5 +666,20 @@ plt.title("Grafo de Menciones entre Candidatos")
 plt.show()
 ```
 
-El grafo que se muestra en la gráfica **_** representa las menciones entre distintos candidatos políticos, donde cada nodo corresponde a un candidato y las flechas indican quién menciona a quién. Se observa una red densa de interacciones, con varios candidatos que se mencionan mutuamente y también a sí mismos. Figuras como Joe Biden, Kamala Harris y Bernie Sanders reciben numerosas menciones, lo que sugiere un rol central en el discurso político, mientras que Donald Trump y Mike Pence destacan por ser quienes más mencionan a otros, posiblemente como parte de una estrategia discursiva activa. Las relaciones bidireccionales indican enfrentamientos o colaboraciones visibles, y la presencia generalizada de autorreferencias muestra que todos los candidatos tienden a hablar de sí mismos, algo típico en contextos políticos. En conjunto, el grafo permite visualizar dinámicas de visibilidad, centralidad e interacción entre los candidatos.
+El grafo presentado en la gráfica **_** representa las menciones entre distintos candidatos políticos, donde cada nodo corresponde a un candidato y las flechas indican quién menciona a quién. Se observa una red densa de interacciones, con varios candidatos que se mencionan mutuamente y también a sí mismos. Figuras como Joe Biden, Kamala Harris y Bernie Sanders reciben numerosas menciones, lo que sugiere un rol central en el discurso político, mientras que Donald Trump y Mike Pence destacan por ser quienes más mencionan a otros, posiblemente como parte de una estrategia discursiva activa. Las relaciones bidireccionales indican enfrentamientos o colaboraciones visibles, y la presencia generalizada de autorreferencias muestra que todos los candidatos tienden a hablar de sí mismos, algo típico en contextos políticos. En conjunto, el grafo permite visualizar dinámicas de visibilidad, centralidad e interacción entre los candidatos.
+
+### Análisis de Sentimientos en los Discursos de los Candidatos
+
+Una vez que se ha realizado la limpieza de los textos, eliminando menciones repetidas y signos de puntuación innecesarios, se puede proceder a analizar los sentimientos expresados en los discursos. Este análisis permite profundizar en el tono emocional y cómo varía a lo largo de la campaña.
+
+En primer lugar, surge la pregunta de **¿cómo varía el tono emocional de los discursos de los candidatos a lo largo del tiempo?** A través del análisis de sentimientos, podemos evaluar el tono de los discursos (positivo, negativo, neutral) y observar cómo este cambia en momentos clave de la campaña, como durante los debates o los anuncios importantes.
+
+Una segunda cuestión interesante es **¿cómo se perciben emocionalmente las menciones entre los candidatos?** Este análisis puede revelar si, en sus discursos, los candidatos emplean un tono más agresivo o elogioso al mencionar a sus oponentes, especialmente durante momentos de confrontación directa o alianzas.
+
+Además, es pertinente preguntarnos **¿existen diferencias emocionales entre los discursos de los candidatos de diferentes partidos?** Un análisis comparativo del tono entre los discursos de los candidatos demócratas y republicanos podría arrojar información sobre cómo abordan temas clave de la campaña, como la economía, la salud y la política exterior, a través de un enfoque emocionalmente distinto.
+
+### Conclusión
+
+El análisis de sentimientos proporciona una comprensión profunda de las dinámicas emocionales en los discursos políticos. Al aplicar esta técnica, no solo identificamos las palabras y frases utilizadas, sino también los patrones emocionales que predominan a lo largo del tiempo. Esto ofrece una valiosa perspectiva sobre cómo los candidatos gestionan el tono de sus discursos para conectar con los votantes, influir en la percepción pública y contrarrestar a sus oponentes de manera efectiva.
+
 
