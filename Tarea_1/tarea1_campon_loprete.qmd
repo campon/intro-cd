@@ -568,7 +568,7 @@ plt.show()
 
 ```
 
-Se observa que las 20 palabras más frecuentes en los discursos de todos los candidatos son mencionadas con mayor frecuencia por el orador Donald Trump. Esto podría sugerir que los discursos de este candidato son más homogéneos en comparación con los de los demás oradores. Al agrupar las palabras más frecuentes por fórmula presidencial, se identifica un patrón similar (véase la figura [@fig-words_agrup]), lo que permite distinguir diferencias entre los discursos de los candidatos de los distintos partidos políticos. Si se analizaran las diferencias en los lugares y fechas de los discursos, sería posible generar listas con las localidades más visitadas por los candidatos, así como los meses en los que se registró la mayor cantidad de discursos (véase la figura **__**).
+Se observa que las 20 palabras más frecuentes en los discursos de todos los candidatos son mencionadas con mayor frecuencia por el orador Donald Trump. Esto podría sugerir que los discursos de este candidato son más homogéneos en comparación con los de los demás oradores. Al agrupar las palabras más frecuentes por fórmula presidencial, se identifica un patrón similar (véase la figura [@fig-words_agrup]), lo que permite distinguir diferencias entre los discursos de los candidatos de los distintos partidos políticos. Si se analizaran las diferencias en los lugares y fechas de los discursos, sería posible generar listas con las localidades más visitadas por los candidatos, así como los meses en los que se registró la mayor cantidad de discursos.
 
 
 ```{python}
@@ -698,7 +698,7 @@ El grafo presentado en la [@fig-grafo] representa las menciones entre distintos 
 
 
 
-Una vez que se ha realizado la limpieza de los textos, eliminando menciones repetidas y signos de puntuación innecesarios, se puede proceder a analizar los sentimientos expresados en los discursos. Este análisis permite profundizar en el tono emocional y cómo varía a lo largo de la campaña.
+Una vez finalizada la limpieza de los textos —eliminando menciones repetidas, signos de puntuación innecesarios y normalizando el contenido—, estamos en condiciones de avanzar hacia un análisis más profundo. En particular, resulta pertinente estudiar los sentimientos expresados en los discursos, lo que nos permitirá explorar el tono emocional de cada intervención y observar cómo varía a lo largo de la campaña. Asimismo, es relevante analizar si existe coincidencia en las localidades donde los candidatos presentan sus discursos, tanto entre ellos como entre los distintos partidos políticos. A partir de esto, nos planteamos tres preguntas clave para guiar el análisis.
 
 En primer lugar, surge la pregunta de **¿cómo varía el tono emocional de los discursos de los candidatos a lo largo del tiempo?** A través del análisis de sentimientos, podemos evaluar el tono de los discursos (positivo, negativo, neutral) y observar cómo este cambia en momentos clave de la campaña, como durante los debates o los anuncios importantes. Es posible crear listas de palabras que consideremos positivas, negativas y neutrales, y buscar que postura toma cada candidato.
 
