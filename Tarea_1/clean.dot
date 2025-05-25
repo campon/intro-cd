@@ -1,0 +1,13 @@
+digraph clean {
+  rankdir=LR;
+  node [shape=box, style=filled, color="#1f77b4", fontcolor=white, fontsize=16, fontname="Helvetica", width=2.5, height=1.2];
+  E [label="Texto\noriginal"];
+  F [label="Minúsculas"];
+  G [label="Eliminar\netiquetas"];
+  H [label="Quitar\npuntuación"];
+  I [label="Espacios\nextra"];
+  J [label="Tokenizar"];
+  K [label="Stopwords"];
+  L [label="Texto\nfinal"];
+  E -> F -> G -> H -> I -> J -> K -> L;
+}

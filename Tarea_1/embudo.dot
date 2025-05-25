@@ -1,0 +1,11 @@
+digraph funnel {
+  rankdir=TB;
+  node [shape=box, style=filled, color="#1f77b4", fontcolor=white, fontsize=14, fontname="Helvetica"];
+
+  A [label="269 discursos\n(6 variables:\nspeaker, title, text, date, location, type)", width=4.5];
+  B [label="Análisis y tratamiento\nde datos faltantes\n(speaker: 3, location: 18, type: 21)", width=4.5];
+  C [label="Filtrado:\nsolo discursos de campaña\n(180 observaciones)", width=3];
+  D [label="Selección de los 5 oradores\ncon mayor frecuencia \n Biden, Trump, \nHarris, Pence, Sanders\n(65% del total)", width=1.5];
+
+  A -> B -> C -> D;
+}
