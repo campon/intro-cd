@@ -192,7 +192,7 @@ top_formula_words = pd.DataFrame([
 top_formula_words = top_formula_words.sort_values(by="count", ascending=False)
 
 
-plt.figure(figsize=(8, 7))
+plt.figure(figsize=(7, 6))
 sns.barplot(data=top_formula_words, x="count", y="word", hue="formula", dodge=False, palette=formula_palette, edgecolor="black")
 #plt.title("Palabras Más Frecuentes por Fórmula Presidencial")
 plt.xlabel("Frecuencia")
