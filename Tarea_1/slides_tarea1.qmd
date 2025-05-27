@@ -30,7 +30,6 @@ execute:
 ```{python}
 from time import time
 from pathlib import Path
-from great_tables import GT
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -150,6 +149,47 @@ formula_palette = {
 }
 
 
+if top_speeches["date"].isnull().any():
+    print("Advertencia: Hay valores nulos en la columna 'date' después de la conversión.")
+
+# agrupamos por mes y por candidato
+top_speeches["month"] = top_speeches["date"].dt.to_period("M")
+top_speeches_grouped = top_speeches.groupby(["month", "speaker"]).size().reset_index(name="count")
+
+# Convertir el período a una fecha para el gráfico
+top_speeches_grouped["month_plot"] = top_speeches_grouped["month"].dt.to_timestamp()
+
+# agregamos 0 a los meses que no tienen discursos
+top_speeches["date"] = pd.to_datetime(top_speeches["date"], errors="coerce")
+top_speeches["month"] = top_speeches["date"].dt.to_period("M")
+grouped = top_speeches.groupby(["month", "speaker"]).size().reset_index(name="count")
+grouped["month_plot"] = grouped["month"].dt.to_timestamp()
+
+all_months = pd.period_range(start=grouped["month"].min(), end=grouped["month"].max(), freq="M")
+all_speakers = top_speeches["speaker"].unique()
+
+full_index = pd.MultiIndex.from_product([all_months, all_speakers], names=["month", "speaker"])
+full_df = pd.DataFrame(index=full_index).reset_index()
+full_merged = pd.merge(full_df, grouped, on=["month", "speaker"], how="left")
+full_merged["count"] = full_merged["count"].fillna(0).astype(int)
+full_merged["month_plot"] = full_merged["month"].dt.to_timestamp()
+
+custom_palette = {
+    "Joe Biden": "#56B4E9",       # Azul claro
+    "Donald Trump": "#E69F00",    # Naranja dorado
+    "Kamala Harris": "#009E73",   # Verde fuerte
+    "Mike Pence": "#D55E00",      # Naranja quemado
+    "Bernie Sanders": "#CC79A7",  # Magenta
+    "Otros": "#999999"            # Gris neutro
+}
+
+formula_palette = {
+    "Joe Biden & Kamala Harris": "#56B4E9",   # Azul claro
+    "Donald Trump & Mike Pence": "#E69F00",   # Naranja dorado
+    "Otros": "#999999"                        # Gris
+}
+
+
 
 ```
 
@@ -164,45 +204,121 @@ formula_palette = {
 **Pipeline de limpieza (sobre la columna text)**
 
 <div style="text-align: center;">
-  <img src="pipeline.png" alt="Pipeline de limpieza" style="width: 90%;">
+  <img src="clean.png" alt="Pipeline de limpieza" style="width: 90%;">
 </div>
 
 ---
 
-
-## Palabras más frecuentes por fórmula
+## Cantidad de discursos por fórmula presidencial durante la campaña
 
 :::{.center}
 
 ```{python}
-top_speeches["formula"] = top_speeches["speaker"].map(formula_map)
-formula_speeches = top_speeches.dropna(subset=["formula"])
+# creamos las fórmulas presidenciales
+formula_map = {
+    "Joe Biden": "Joe Biden & Kamala Harris",
+    "Kamala Harris": "Joe Biden & Kamala Harris",
+    "Donald Trump": "Donald Trump & Mike Pence",
+    "Mike Pence": "Donald Trump & Mike Pence"
+}
 
-formula_word_counts = {}
-for formula in formula_speeches["formula"].unique():
-    all_words = formula_speeches[formula_speeches["formula"] == formula]["FilteredWordList"].explode()
-    formula_word_counts[formula] = Counter(all_words)
+full_merged["formula"] = full_merged["speaker"].map(formula_map)
+# filtramos a sanders
+formula_df = full_merged[full_merged["formula"].notnull()]
 
-top_formula_words = pd.DataFrame([
-    {"formula": formula, "word": word, "count": count}
-    for formula, counts in formula_word_counts.items()
-    for word, count in counts.most_common(15)
-])
+formula_grouped = formula_df.groupby(["month", "formula"]).agg({
+    "count": "sum"
+}).reset_index()
+formula_grouped["month_plot"] = formula_grouped["month"].dt.to_timestamp()
 
-top_formula_words = top_formula_words.sort_values(by="count", ascending=False)
+plt.figure(figsize=(9.5,6.5))
+sns.lineplot(data=formula_grouped, x="month_plot", y="count", hue="formula", marker="o", linewidth=3.5, markersize=10, palette=formula_palette)
 
+plt.xlabel("Fecha", fontsize=14)
+plt.ylabel("Cantidad de Discursos", fontsize=14)
+plt.legend(title="Fórmula Presidencial", fontsize=12)
+plt.xticks(rotation=0, fontsize=12)
+plt.yticks(range(0, formula_grouped["count"].max() + 1), fontsize=12)
+plt.grid(axis="y", linestyle="--", alpha=0.7)
 
-plt.figure(figsize=(7, 6))
-sns.barplot(data=top_formula_words, x="count", y="word", hue="formula", dodge=False, palette=formula_palette, edgecolor="black")
-#plt.title("Palabras Más Frecuentes por Fórmula Presidencial")
-plt.xlabel("Frecuencia")
-plt.ylabel("Palabras")
-plt.legend(title="Fórmula", loc='lower right')
+eventos = [
+    {"fecha": "2020-04", "texto": "Retiro de Bernie Sanders", "altura": 0.2},
+    {"fecha": "2020-07", "texto": "Inicio campaña Kamala Harris", "altura": 0.5},
+    {"fecha": "2020-08", "texto": "Formulas: \nBiden & Harris\nTrump & Mike Pence", "altura": 0.7},
+    {"fecha": "2020-09", "texto": "Debate presidencial en TV", "altura": 0.9},
+]
+
+for evento in eventos:
+    fecha = pd.Timestamp(evento["fecha"])
+    plt.axvline(fecha, color="black", linestyle="--", alpha=0.6, linewidth=2)
+    plt.text(fecha, plt.ylim()[1]*evento["altura"], evento["texto"],
+             rotation=0, fontsize=11, color="black",
+             verticalalignment="top", horizontalalignment="left",
+             bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="gray", alpha=0.8))
+
 plt.tight_layout()
 plt.show()
 ```
 
 :::
+
+
+## Las 20 palabras más frecuentes por candidato
+
+:::{.center}
+
+
+```{python}
+# Paso 1: contar todas las palabras
+all_words = top_speeches["FilteredWordList"].explode()
+total_counts = Counter(all_words)
+
+# Paso 2: obtener top 20 palabras globales
+top_20_words = [word for word, _ in total_counts.most_common(20)]
+
+# Paso 3: contar para cada candidato
+word_speaker_counts = []
+
+for speaker in top_speeches["speaker"].unique():
+    speaker_words = top_speeches[top_speeches["speaker"] == speaker]["FilteredWordList"].explode()
+    speaker_counts = Counter(speaker_words)
+    for word in top_20_words:
+        word_speaker_counts.append({
+            "word": word,
+            "speaker": speaker,
+            "count": speaker_counts[word]
+        })
+
+word_df = pd.DataFrame(word_speaker_counts)
+
+# Paso 4: pivotear para tener candidatos como columnas
+pivot_df = word_df.pivot(index="word", columns="speaker", values="count").fillna(0)
+
+# Paso 5: ordenar palabras por frecuencia total
+pivot_df["total"] = pivot_df.sum(axis=1)
+pivot_df = pivot_df.sort_values("total", ascending=False)
+
+# Paso 6: graficar barras apiladas
+pivot_df.drop(columns="total").plot(
+    kind="barh",
+    stacked=True,
+    figsize=(9.5, 6.5),
+    color=custom_palette,
+    edgecolor='black'
+)
+
+plt.xlabel("Frecuencia Total")
+plt.ylabel("Palabra")
+plt.legend(title="Candidato", bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.gca().invert_yaxis()  # Para que las palabras más frecuentes aparezcan arriba
+plt.tight_layout()
+plt.show()
+
+```
+
+:::
+
+---
 
 
 ## Menciones entre candidatos
@@ -261,25 +377,16 @@ plt.show()
 
 :::
 
----
 
-
-## Futuros análisis
-
-- **Análisis de sentimientos:**
-Explorar el tono emocional (positivo, negativo, neutral) de los discursos y su evolución a lo largo de la campaña.
-
-- **Menciones entre candidatos:**
-Analizar si las menciones entre candidatos son agresivas o elogiosas, y cómo varían en momentos clave.
-
-- **Análisis geográfico:**
-Investigar diferencias en las localidades donde los candidatos realizan sus discursos y sus estrategias regionales.
-
----
+:::{.center}
 
 ## ¿Preguntas?
 
 
 ### ¡Gracias!
 
+\
+
 Link al repositorio: [https://github.com/campon/intro-cd](hhttps://github.com/campon/intro-cd)
+
+:::
