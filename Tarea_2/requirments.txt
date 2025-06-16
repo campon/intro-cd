@@ -5,3 +5,5 @@ pillow
 networkx
 nltk
 scikit-learn
+great_tables
+tabulate
