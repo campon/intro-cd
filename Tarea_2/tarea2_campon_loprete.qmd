@@ -1,0 +1,315 @@
+---
+title: Análisis de Discursos Políticos de la Campaña Presidencial de Estados Unidos 2020
+subtitle: Tarea 2 - Introducción a la Ciencia de Datos - FING 2025
+author: Ignacio Campón y Mauro Loprete
+jupyter: base
+execute:
+  echo: false
+  message: false
+  warning: false
+format: pdf
+lang: es
+
+---
+
+
+```{python}
+import re
+import os
+
+from time import time
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from nltk.corpus import stopwords
+import nltk
+import matplotlib.patches as mpatches
+
+
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.decomposition import PCA
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.metrics import precision_score, recall_score
+from sklearn.metrics import ConfusionMatrixDisplay
+from sklearn.model_selection import GridSearchCV
+from sklearn.linear_model import LogisticRegression
+
+sns.set_theme(style="whitegrid")
+```
+
+
+```{python}
+df_speeches = pd.read_csv('../data/us_2020_election_speeches.csv')
+```
+
+
+
+**Introducción**
+
+La tarea 1 se centró en el análisis cuantitativo de 269 discursos políticos correspondientes a la campaña presidencial de Estados Unidos en 2020, de los cuales se seleccionan los cinco oradores con mayor número de intervenciones (Joe Biden, Donald Trump, Mike Pence, Bernie Sanders y Kamala Harris). A través de un primer barrido de datos faltantes y una inspección manual de calidad, se confirma que la información es suficientemente completa y homogénea para emprender un estudio riguroso de patrones de publicación y contenido verbal.
+
+La base incluye seis variables: tres categóricas (*speaker*, *type*, *location*), dos de texto (*title*, *text*) y una temporal (*date*). Se observa un total de 269 registros, distribuídos entre el 15 de enero y el 16 de octubre de 2020. Para preparar el corpus, se incorpora una función para limpiar y normalizar el texto, que incluye los siguientes pasos:
+
+1. Elimina la introducción inicial del texto, quitando todo el contenido hasta el primer salto de línea (\\n), lo cual remueve encabezados redundantes o repeticiones del orador.
+2. Convierte todo el texto a minúsculas, asegurando uniformidad léxica para evitar duplicación artificial de palabras debido a diferencias de mayúsculas/minúsculas.
+3. Elimina marcas de tiempo entre paréntesis, como (00:01) o (1:05:12), que pueden aparecer por transcripciones automáticas o videos.
+4. Suprime encabezados del orador, como "joe biden:", "donald trump:", etc., incluyendo espacios y versiones como "president trump", para evitar que inflen las frecuencias de palabras irrelevantes al contenido.
+5. Elimina signos de puntuación seleccionados, incluyendo: `[ ]`, `„`, `:`, `?`, `.`, `!`, `;`, comillas dobles y simples, así como saltos de línea adicionales.
+6. Normaliza los espacios en blanco, reemplazando múltiples espacios por uno solo y eliminando espacios al inicio y al final del texto.
+
+Estos pasos aseguran un vocabulario depurado y uniforme, indispensable para posteriores análisis de frecuencias, sentimiento o co‐ocurrencias de términos.
+
+```{python}
+
+def clean_text(df, column_name):
+    result = df[column_name]
+
+    # quitar todo hasta el primer \n (introducción del texto, que a veces repite el orador)
+    result = result.str.replace(r"^[^\n]*\n", "", regex=True)
+
+    # convertir a minúsculas
+    result = result.str.lower()
+
+    # eliminar timestamps como (00:01), (1:05:12), etc.
+    result = result.str.replace(r"\(\d{1,2}:\d{2}(?::\d{2})?\)", " ", regex=True)
+
+    # eliminar encabezados del orador tipo "joe biden:" con espacios
+    result = result.str.replace(
+        r"\b(joe biden|donald trump|kamala harris|mike pence|bernie sanders|president trump)\s*:", 
+        "", 
+        regex=True
+    )
+
+    # eliminar signos de puntuación definidos
+    result = result.str.replace(r"[{}\n]".format(re.escape("[],:?.!;\"'")), " ", regex=True)
+
+    # eliminar espacios extra
+    result = result.str.replace(r"\s+", " ", regex=True).str.strip()
+
+    return result
+# Realizar la limpieza de los datos que crea pertinente. Se espera que usen la función clean_text() de la entrega anterior.
+df_speeches_clean = df_speeches.copy()
+df_speeches_clean['text'] = clean_text(df_speeches_clean, 'text')
+
+```
+
+```{python}
+#| label: fig-frecuencia-dicursos
+#| fig-cap: Frecuencia de discursos por candidato (Campaña 2020).
+#| fig-width: 3
+#| fig-height: 3
+
+# Filtrar top 5 oradores para graficar
+top_5_candidates = df_speeches_clean["speaker"].value_counts().head(5).index
+data_top5 = df_speeches_clean[df_speeches_clean["speaker"].isin(top_5_candidates)]
+
+# Crear figura
+plt.figure(figsize=(6, 6))
+ax = sns.countplot(data=data_top5, x="speaker", order=top_5_candidates)
+
+# Títulos y etiquetas
+#plt.title("Frecuencia de discursos por orador (Campaña 2020)", fontsize=14, weight='bold')
+plt.xlabel("Candidato", fontsize=11)
+plt.ylabel("Cantidad de discursos", fontsize=11)
+
+# Mostrar valores sobre cada barra
+for p in ax.patches:
+    height = int(p.get_height())
+    ax.annotate(f'{height}', 
+                (p.get_x() + p.get_width() / 2., height), 
+                ha='center', va='bottom', fontsize=10)
+
+# Ajustar espaciado y estética
+plt.xticks(fontsize=8)
+plt.yticks(fontsize=9)
+plt.grid(axis='y', alpha=0.5)
+sns.despine()  # Elimina borde superior y derecho
+
+plt.tight_layout()
+plt.savefig("fig-frecuencia-dicursos.png", dpi=300)
+plt.close()
+
+```
+
+::: {.cell-output-display}
+![Frecuencia de discursos por candidato (Campaña 2020).](fig-frecuencia-dicursos.png){ width=60% #fig-frecuencia-dicursos fig-pos='t'}
+:::
+
+La figura [@fig-frecuencia-dicursos] muestra la frecuencia de discursos por candidato en la campaña presidencial de Estados Unidos 2020. Se observa que Joe Biden y Donald Trump son los candidatos con mayor número de discursos, seguidos por Mike Pence, Bernie Sanders y Kamala Harris. Esta distribución refleja la actividad política y mediática de cada candidato durante la campaña.
+
+```{python}
+
+# Filtramos los 3 candidatos con más discursos.
+top_3_candidates = df_speeches_clean["speaker"].value_counts().head(3).index
+
+df_speeches_top_3 = df_speeches_clean[
+     df_speeches_clean["speaker"].isin(top_3_candidates)
+].reset_index(drop=True)
+#df_speeches_top_3
+
+```
+
+Tras seleccionar los tres candidatos con más discursos: Joe Biden, Donald Trump y Mike Pence, se procede a dividir el conjunto de datos en dos partes: un conjunto de desarrollo (entrenamiento) y un conjunto de prueba (test). Esta división nos permite evaluar el rendimiento de los modelos de clasificación en datos no vistos, asegurando que las métricas obtenidas sean representativas del desempeño real del modelo. Para construir estos conjuntos, se utiliza un muestreo estratificado, garantizando que la proporción de discursos de cada candidato se mantenga en ambos conjuntos. Esto es crucial para evitar sesgos en el modelo y asegurar una evaluación justa. Observese la figura [@fig-frecuencia-test_train], que muestra la distribución de discursos por candidato en los conjuntos de desarrollo y prueba, confirmando que la proporción de discursos se mantiene constante entre ambos conjuntos.
+
+```{python}
+
+# 1: Separar 30% del conjunto para test. Al resto lo llamamos "dev" (desarrollo).
+
+X_dev, X_test, y_dev, y_test = train_test_split(
+    df_speeches_top_3["text"], 
+    df_speeches_top_3["speaker"], 
+    stratify=df_speeches_top_3["speaker"], 
+    test_size=0.3, 
+    random_state=42
+)
+#print(f"Tamaños de los conjuntos: {df_speeches_top_3.shape}")
+#print(f"Tamaños de los conjuntos: {X_dev.shape}, {X_test.shape}")
+#print(y_dev.unique())
+
+```
+
+```{python}
+#| label: fig-frecuencia-test_train
+#| fig-cap: Distribución de discursos por candidato y conjunto.
+#| fig-width: 3
+#| fig-height: 3
+
+# 2: Visualización de la proporción de cada candidato por conjunto
+
+def plot_candidate_distribution_relative(y_dev, y_test):
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
+    # Unificar datos
+    df_dev = pd.DataFrame({'candidato': y_dev, 'conjunto': 'Desarrollo'})
+    df_test = pd.DataFrame({'candidato': y_test, 'conjunto': 'Prueba'})
+    df = pd.concat([df_dev, df_test])
+
+    # Selección de top 3 candidatos
+    top_3_candidates = df['candidato'].value_counts().head(3).index
+    df = df[df['candidato'].isin(top_3_candidates)]
+
+    # Calcular proporciones relativas (cada fila suma 1)
+    counts = df.groupby(['candidato', 'conjunto']).size().unstack(fill_value=0)
+    proportions = counts.div(counts.sum(axis=1), axis=0)
+
+    # Graficar
+    plt.figure(figsize=(6, 6))
+    sns.set(style="whitegrid")
+    ax = sns.countplot(data=df, x='candidato', hue='conjunto',
+                       palette='pastel', order=top_3_candidates)
+
+    # Anotar porcentaje relativo en cada barra
+    for p in ax.patches:
+        height = p.get_height()
+        if height == 0:
+            continue
+        
+        x = p.get_x() + p.get_width() / 2
+
+        # Obtener valores de los ejes
+        candidato = p.get_x() + p.get_width() / 2.
+        grupo = p.get_label()  # no funciona, vamos manual
+
+        # Alternativa: extraer texto del eje X y hue desde el objeto de la barra
+        # Primero: obtener nombre del candidato (eje X)
+        candidato_idx = int(p.get_x() + p.get_width() / 2)
+        candidato_name = p.get_x() + p.get_width() / 2.
+
+        # Alternativa segura: obtener valores desde la posición de la barra
+        candidato = p.get_x() + p.get_width() / 2.
+        # Pero mejor: usemos `get_x()` y `get_width()` para detectar el nombre con orden
+        x_idx = round(p.get_x() + p.get_width() / 2.)
+        candidato = ax.get_xticklabels()[x_idx].get_text()
+
+        # Color define el conjunto (posición en leyenda)
+        color = p.get_facecolor()
+        conjunto = 'Desarrollo' if color == ax.patches[0].get_facecolor() else 'Prueba'
+
+        # Extraer proporción
+        try:
+            porcentaje = proportions.loc[candidato, conjunto]
+            ax.annotate(f'{porcentaje:.1%}',
+                        (x, height),
+                        ha='center', va='bottom', fontsize=9)
+        except KeyError:
+            continue  # Por si falta el dato
+
+    # Estética
+    #plt.title('Distribución de discursos por candidato y conjunto', fontsize=14, weight='bold')
+    plt.xlabel('Candidato', fontsize=11)
+    plt.ylabel('Cantidad de discursos', fontsize=11)
+    plt.legend(title='Conjunto', fontsize=8, title_fontsize=10)
+    plt.xticks(fontsize=8)
+    plt.yticks(fontsize=9)
+    plt.tight_layout()
+    sns.despine()
+    plt.savefig("fig-frecuencia-test_train.png", dpi=300)
+    plt.close()
+
+plot_candidate_distribution_relative(y_dev, y_test)
+```
+
+::: {.cell-output-display}
+![Distribución de discursos por candidato y conjunto.](fig-frecuencia-test_train.png){ width=60% #fig-frecuencia-test_train fig-pos='t'}
+:::
+
+Para transformar el texto del conjunto de entrenamiento a una representación numérica utilicé la técnica de Bag of Words (BoW), implementada a través del $\texttt{CountVectorizer}$ de $\texttt{scikit-learn}$. Esta técnica convierte cada documento en un vector donde cada componente representa la frecuencia absoluta de una palabra específica del vocabulario del corpus.
+
+BoW parte del supuesto de que el orden de las palabras no importa. Se construye una matriz $D×V$, donde, 4 es la cantidad de discursos (filas), $V$ es el tamaño del vocabulario total (columnas), y cada celda $[i,j]$ contiene el número de veces que la palabra $j$ aparece en el documento $i$.
+
+En otras palabras, cada documento se representa como un vector de conteo de palabras, sin importar su contexto o posición.
+
+Se transforma el conjunto de entrenamiento de dos maneras:
+
+a. Unigramas incluyendo stopwords
+No se eliminan palabras vacías (stopwords), por lo que el vocabulario es más amplio pero contiene muchas palabras con poca capacidad discriminativa. Entre los 100 discursos existen 13.704 palabras únicas (unigramas) en el corpus. La matriz resultante tiene una proporción de entradas no nulas: ~0.0889.
+
+b. Unigramas + bigramas, excluyendo stopwords en inglés
+Se remueven stopwords usando la lista estándar del idioma inglés y se incluyen también combinaciones de dos palabras (bigramas), lo cual expande el tamaño del vocabulario pero aporta información contextual más rica. La dimensión de la matriz resulta en los 100 discursos, 197.501 combinaciones de bigramas — es decir, un vocabulario muchísimo más grande al incorporar combinaciones de dos palabras. La matriz resultante tiene una proporción de entradas no nulas: ~0.0197.
+
+A pesar del alto número de columnas (features), cada documento contiene solo un pequeño subconjunto del vocabulario total, por lo que la mayoría de las entradas de la matriz son ceros. Por esta razón, la matriz resultante es una matriz dispersa y para ahorrar memoria y acelerar los cálculos son almacenadas guardando unicamente las entradas no nulas. De hecho, en el caso del vectorizador con unigramas y bigramas, la matriz tiene casi 200 mil columnas, pero menos del 2% de sus celdas contienen información distinta de cero. En el primer caso, con unigramas y stopwords, la matriz tiene más de 13 mil columnas, pero menos del 9% de sus celdas contienen información distinta de cero.
+
+Este comportamiento es típico en tareas de procesamiento de lenguaje natural, y si estuviéramos trabajando con millones de documentos, representar esta matriz como densa (con todos los ceros explícitos) consumiría cantidades de memoria astronómicas e inviables para la mayoría de los equipos. Esta técnica es sencilla y efectiva, pero produce vectores de alta dimensionalidad y dispersos. 
+
+
+
+continuar desde aca.
+
+!Por ello, su uso suele combinarse con técnicas de reducción de dimensionalidad o representaciones más densas como TF-IDF.!
+
+
+
+```{python}
+# 3: Transforme el texto del conjunto de entrenamiento a la representación numérica (features) de conteo de palabras o bag of words.
+
+vectorizer = CountVectorizer(
+    stop_words=None,
+    lowercase=True,
+    token_pattern=r"(?u)\b\w+\b",
+    ngram_range=(1, 1))
+
+X_dev_counts = vectorizer.fit_transform(X_dev)
+#print(f"Dimensiones de la matriz de conteo: {X_dev_counts.shape}")
+#print(f"Proporción de entradas no cero: {X_dev_counts.nnz / X_dev_counts.shape[0] / X_dev_counts.shape[1]}")
+
+
+vectorizer2 = CountVectorizer(
+    stop_words=stopwords.words("english"),
+    lowercase=True,
+    token_pattern=r"(?u)\b\w+\b",
+    ngram_range=(1, 2))
+
+X_dev_counts2 = vectorizer2.fit_transform(X_dev)
+
+#print(f"Dimensiones de la matriz de conteo: {X_dev_counts2.shape}")
+#print(f"Proporción de entradas no cero: {X_dev_counts2.nnz / X_dev_counts2.shape[0] / X_dev_counts2.shape[1]}")
+```
