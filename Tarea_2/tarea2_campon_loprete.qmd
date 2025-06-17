@@ -2,14 +2,13 @@
 title: Análisis de Discursos Políticos de la Campaña Presidencial de Estados Unidos 2020
 subtitle: Tarea 2 - Introducción a la Ciencia de Datos - FING 2025
 author: Ignacio Campón y Mauro Loprete
-jupyter: base
+jupyter: python3
 execute:
   echo: false
   message: false
   warning: false
 format: pdf
 lang: es
-
 ---
 
 
@@ -51,7 +50,7 @@ df_speeches = pd.read_csv('../data/us_2020_election_speeches.csv')
 
 
 
-**Introducción**
+## Introducción
 
 La tarea 1 se centró en el análisis cuantitativo de 269 discursos políticos correspondientes a la campaña presidencial de Estados Unidos en 2020, de los cuales se seleccionan los cinco oradores con mayor número de intervenciones (Joe Biden, Donald Trump, Mike Pence, Bernie Sanders y Kamala Harris). A través de un primer barrido de datos faltantes y una inspección manual de calidad, se confirma que la información es suficientemente completa y homogénea para emprender un estudio riguroso de patrones de publicación y contenido verbal.
 
@@ -262,7 +261,7 @@ plot_candidate_distribution_relative(y_dev, y_test)
 ![Distribución de discursos por candidato y conjunto.](fig-frecuencia-test_train.png){ width=60% #fig-frecuencia-test_train fig-pos='t'}
 :::
 
-Para transformar el texto del conjunto de entrenamiento a una representación numérica utilicé la técnica de Bag of Words (BoW), implementada a través del $\texttt{CountVectorizer}$ de $\texttt{scikit-learn}$. Esta técnica convierte cada documento en un vector donde cada componente representa la frecuencia absoluta de una palabra específica del vocabulario del corpus.
+Para transformar el texto del conjunto de entrenamiento a una representación numérica se utilizó la técnica de Bag of Words (BoW), implementada a través del $\texttt{CountVectorizer}$ de $\texttt{scikit-learn}$. Esta técnica convierte cada documento en un vector donde cada componente representa la frecuencia absoluta de una palabra específica del vocabulario del corpus.
 
 BoW parte del supuesto de que el orden de las palabras no importa. Se construye una matriz $D×V$, donde, 4 es la cantidad de discursos (filas), $V$ es el tamaño del vocabulario total (columnas), y cada celda $[i,j]$ contiene el número de veces que la palabra $j$ aparece en el documento $i$.
 
@@ -276,15 +275,67 @@ No se eliminan palabras vacías (stopwords), por lo que el vocabulario es más a
 b. Unigramas + bigramas, excluyendo stopwords en inglés
 Se remueven stopwords usando la lista estándar del idioma inglés y se incluyen también combinaciones de dos palabras (bigramas), lo cual expande el tamaño del vocabulario pero aporta información contextual más rica. La dimensión de la matriz resulta en los 100 discursos, 197.501 combinaciones de bigramas — es decir, un vocabulario muchísimo más grande al incorporar combinaciones de dos palabras. La matriz resultante tiene una proporción de entradas no nulas: ~0.0197.
 
-A pesar del alto número de columnas (features), cada documento contiene solo un pequeño subconjunto del vocabulario total, por lo que la mayoría de las entradas de la matriz son ceros. Por esta razón, la matriz resultante es una matriz dispersa y para ahorrar memoria y acelerar los cálculos son almacenadas guardando unicamente las entradas no nulas. De hecho, en el caso del vectorizador con unigramas y bigramas, la matriz tiene casi 200 mil columnas, pero menos del 2% de sus celdas contienen información distinta de cero. En el primer caso, con unigramas y stopwords, la matriz tiene más de 13 mil columnas, pero menos del 9% de sus celdas contienen información distinta de cero.
+Un n-grama es una secuencia contigua de n palabras extraídas de un texto. Por ejemplo, si n = 1, se generan unigramas (palabras individuales), mientras que si n = 2, se obtienen bigramas (pares de palabras consecutivas). Esta técnica permite incorporar información sobre el contexto local en el que aparecen las palabras, lo cual puede ser útil para tareas de clasificación o análisis de contenido.
 
-Este comportamiento es típico en tareas de procesamiento de lenguaje natural, y si estuviéramos trabajando con millones de documentos, representar esta matriz como densa (con todos los ceros explícitos) consumiría cantidades de memoria astronómicas e inviables para la mayoría de los equipos. Esta técnica es sencilla y efectiva, pero produce vectores de alta dimensionalidad y dispersos. 
+A partir de estos n-gramas, se construye una representación numérica conocida como TF-IDF (Term Frequency - Inverse Document Frequency). Esta transformación convierte cada documento en un vector donde cada posición representa un término del vocabulario, ponderado de acuerdo a su relevancia. La frecuencia de término (TF) mide cuántas veces aparece una palabra en un documento, mientras que la frecuencia inversa de documento (IDF) penaliza aquellas palabras que aparecen en muchos documentos, ya que aportan poca información distintiva. En conjunto, esta transformación resalta los términos que son importantes en un documento específico pero poco frecuentes en el resto del corpus.
+
+En otras palabras, cada documento se representa como un vector de conteo de palabras, sin importar su contexto o posición.
+
+Se transforma el conjunto de entrenamiento de dos maneras:
+
+a. Unigramas incluyendo stopwords
+No se eliminan palabras vacías (stopwords), por lo que el vocabulario es más amplio pero contiene muchas palabras con poca capacidad discriminativa. Entre los 100 discursos existen 13.704 palabras únicas (unigramas) en el corpus. La matriz resultante tiene una proporción de entradas no nulas: ~0.0889.
 
 
+b. Unigramas + bigramas, excluyendo stopwords en inglés
+Se remueven stopwords usando la lista estándar del idioma inglés y se incluyen también combinaciones de dos palabras (bigramas), lo cual expande el tamaño del vocabulario pero aporta información contextual más rica. La dimensión de la matriz resulta en los 100 discursos, 197.501 combinaciones de bigramas — es decir, un vocabulario muchísimo más grande al incorporar combinaciones de dos palabras. La matriz resultante tiene una proporción de entradas no nulas: ~0.0197.
 
-continuar desde aca.
+A pesar del alto número de columnas (features), cada documento contiene solo un pequeño subconjunto del vocabulario total, por lo que la mayoría de las entradas de la matriz son ceros. Por esta razón, la matriz resultante es una matriz dispersa y para ahorrar memoria y acelerar los cálculos son almacenadas guardando únicamente las entradas no nulas. De hecho, en el caso del vectorizador con unigramas y bigramas, la matriz tiene casi 200 mil columnas, pero menos del 2% de sus celdas contienen información distinta de cero. En el primer caso, con unigramas y stopwords, la matriz tiene más de 13 mil columnas, pero menos del 9% de sus celdas contienen información distinta de cero.
 
-!Por ello, su uso suele combinarse con técnicas de reducción de dimensionalidad o representaciones más densas como TF-IDF.!
+Este comportamiento es típico en tareas de procesamiento de lenguaje natural. Si se trabajara con millones de documentos, representar esta matriz como densa (con todos los ceros explícitos) consumiría cantidades de memoria astronómicas e inviables para la mayoría de los equipos. Por ello, se emplean estructuras de datos especializadas que almacenan únicamente las posiciones y valores de las entradas no nulas, permitiendo un uso eficiente de la memoria y un procesamiento más rápido. Esta técnica es sencilla y efectiva, pero produce vectores de alta dimensionalidad y dispersos, lo que hace fundamental el uso de representaciones dispersas para su manejo computacional.
+
+
+Una mejor representación que Bag of Words, se puede utilizar TF-IDF (Term Frequency-Inverse Document Frequency), que pondera la importancia de cada palabra en el contexto del corpus, reduciendo el impacto de palabras comunes y mejorando la capacidad discriminativa del modelo. Un ejemplo de la representación de TF-IDF se muestra a continuación: 
+
+
+- Documento 1: "el gato come pescado"
+- Documento 2: "el perro come carne"
+
+El vocabulario es: ["el", "gato", "come", "pescado", "perro", "carne"]
+
+Para cada término, calculamos:
+
+- TF (frecuencia de término): número de veces que aparece la palabra en el documento.
+- DF (document frequency): número de documentos donde aparece la palabra.
+- IDF (inversa de la frecuencia de documento):  
+  $$\text{IDF}(t) = \log\left(\frac{N}{DF(t)}\right)$$
+  donde $N$ es el número total de documentos.
+
+Por ejemplo, para la palabra "gato":
+
+- TF en Documento 1: 1, en Documento 2: 0
+
+- DF: 1 (solo aparece en Documento 1)
+
+- IDF: log(2/1) = 0.301
+
+Para la palabra "el":
+
+- TF en ambos documentos: 1
+
+- DF: 2 (aparece en ambos)
+
+- IDF: log(2/2) = 0
+
+El vector TF-IDF para **Documento 1** sería:
+
+- ["el": 0, "gato": 0.301, "come": 0, "pescado": 0.301, "perro": 0, "carne": 0]
+
+**Y para Documento 2**:
+
+- ["el": 0, "gato": 0, "come": 0, "pescado": 0, "perro": 0.301, "carne": 0.301]
+
+
 
 
 
@@ -313,3 +364,254 @@ X_dev_counts2 = vectorizer2.fit_transform(X_dev)
 #print(f"Dimensiones de la matriz de conteo: {X_dev_counts2.shape}")
 #print(f"Proporción de entradas no cero: {X_dev_counts2.nnz / X_dev_counts2.shape[0] / X_dev_counts2.shape[1]}")
 ```
+
+```{python}
+# 4: Obtenga la representación numérica Term Frequency - Inverse Document Frequency.
+
+X_dev_tfidf = TfidfTransformer(use_idf=True).fit_transform(X_dev_counts)
+print(f"Dimensiones de la matriz TF-IDF: {X_dev_tfidf.shape}")
+
+X_dev_tfidf2 = TfidfTransformer(use_idf=True).fit_transform(X_dev_counts2)
+```
+
+
+```{python}
+# 5 :Muestre en un mapa el conjunto de entrenamiento, utilizando las dos primeras componentes PCA sobre los vectores de tf-idf.
+
+pca = PCA(n_components=10)
+X_dev_pca = pca.fit_transform(X_dev_tfidf.toarray())
+
+# PCA sobre X_dev_tfidf
+pca = PCA(n_components=10)
+X_dev_pca = pca.fit_transform(X_dev_tfidf.toarray())
+
+# Gráfico PCA 2D
+plt.figure(figsize=(8, 6))
+sns.set(style="whitegrid")
+ax = sns.scatterplot(
+    x=X_dev_pca[:, 0],
+    y=X_dev_pca[:, 1],
+    hue=y_dev,
+    palette="Dark2",
+    alpha=0.7,
+    s=60
+)
+plt.xlabel('Componente 1', fontsize=11)
+plt.ylabel('Componente 2', fontsize=11)
+plt.title('Proyección PCA sobre el conjunto de desarrollo (TF-IDF 1)', fontsize=13, weight='bold')
+plt.legend(title='Candidato', fontsize=9, title_fontsize=10)
+plt.xticks(fontsize=9)
+plt.yticks(fontsize=9)
+plt.grid(alpha=0.3)
+sns.despine()
+plt.tight_layout()
+plt.show()
+
+# Gráfico de varianza explicada
+fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+sns.set(style="whitegrid")
+
+# Acumulada
+axes[0].plot(range(1, 11), np.cumsum(pca.explained_variance_ratio_[:10]), marker='o', linestyle='-')
+axes[0].set_title('Varianza explicada acumulada (TF-IDF 1)', fontsize=12, weight='bold')
+axes[0].set_xlabel('Número de componentes', fontsize=10)
+axes[0].set_ylabel('Varianza explicada acumulada', fontsize=10)
+axes[0].grid(alpha=0.3)
+axes[0].set_xticks(range(1, 11))
+axes[0].tick_params(labelsize=9)
+
+# Individual
+axes[1].plot(range(1, 11), pca.explained_variance_ratio_[:10], marker='o', linestyle='-')
+axes[1].set_title('Varianza explicada por componente (TF-IDF 1)', fontsize=12, weight='bold')
+axes[1].set_xlabel('Número de componentes', fontsize=10)
+axes[1].set_ylabel('Varianza explicada', fontsize=10)
+axes[1].grid(alpha=0.3)
+axes[1].set_xticks(range(1, 11))
+axes[1].tick_params(labelsize=9)
+
+plt.tight_layout()
+plt.show()
+
+# PCA sobre X_dev_tfidf2
+pca2 = PCA(n_components=10)
+X_dev_pca2 = pca2.fit_transform(X_dev_tfidf2.toarray())
+
+# Gráfico PCA 2D
+plt.figure(figsize=(8, 6))
+sns.set(style="whitegrid")
+ax = sns.scatterplot(
+    x=X_dev_pca2[:, 0],
+    y=X_dev_pca2[:, 1],
+    hue=y_dev,
+    palette="Dark2",
+    alpha=0.7,
+    s=60
+)
+plt.xlabel('Componente 1', fontsize=11)
+plt.ylabel('Componente 2', fontsize=11)
+plt.title('Proyección PCA sobre el conjunto de desarrollo (TF-IDF 2)', fontsize=13, weight='bold')
+plt.legend(title='Candidato', fontsize=9, title_fontsize=10)
+plt.xticks(fontsize=9)
+plt.yticks(fontsize=9)
+plt.grid(alpha=0.3)
+sns.despine()
+plt.tight_layout()
+plt.show()
+
+# Gráfico de varianza explicada
+fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+sns.set(style="whitegrid")
+
+# Acumulada
+axes[0].plot(range(1, 11), np.cumsum(pca2.explained_variance_ratio_[:10]), marker='o', linestyle='-')
+axes[0].set_title('Varianza explicada acumulada (TF-IDF 2)', fontsize=12, weight='bold')
+axes[0].set_xlabel('Número de componentes', fontsize=10)
+axes[0].set_ylabel('Varianza explicada acumulada', fontsize=10)
+axes[0].grid(alpha=0.3)
+axes[0].set_xticks(range(1, 11))
+axes[0].tick_params(labelsize=9)
+
+# Individual
+axes[1].plot(range(1, 11), pca2.explained_variance_ratio_[:10], marker='o', linestyle='-')
+axes[1].set_title('Varianza explicada por componente (TF-IDF 2)', fontsize=12, weight='bold')
+axes[1].set_xlabel('Número de componentes', fontsize=10)
+axes[1].set_ylabel('Varianza explicada', fontsize=10)
+axes[1].grid(alpha=0.3)
+axes[1].set_xticks(range(1, 11))
+axes[1].tick_params(labelsize=9)
+
+plt.tight_layout()
+plt.show()
+```
+
+
+## Modelo de aprendizaje
+
+Una vez obtenida la representación numérica de los discursos mediante la transformación TF-IDF, se procede a entrenar un modelo de aprendizaje supervisado para clasificar los discursos según el candidato que los pronunció.
+
+En este caso se utiliza el modelo **Naive Bayes Multinomial**, ampliamente utilizado en tareas de clasificación de texto por su simplicidad, rapidez y buenos resultados incluso con datos ruidosos o de alta dimensión.
+
+### Naive Bayes Multinomial
+
+El modelo se basa en el **Teorema de Bayes**, que permite estimar la probabilidad de una clase $c$ dado un documento $d$:
+
+$$
+P(c \mid d) = \frac{P(c) \cdot P(d \mid c)}{P(d)}
+$$
+
+Como $P(d)$ es constante para todas las clases, el modelo predice la clase que maximiza la siguiente expresión:
+
+$$
+\hat{c} = \arg\max_c \left( P(c) \cdot P(d \mid c) \right)
+$$
+
+Para documentos representados como vectores de frecuencia de términos $\mathbf{x} = (x_1, x_2, \ldots, x_n)$, donde $x_i$ es el número de veces que aparece el término $i$, el modelo **multinomial** asume que:
+
+$$
+P(d \mid c) = \prod_{i=1}^n P(w_i \mid c)^{x_i}
+$$
+
+Donde $P(w_i \mid c)$es la probabilidad de observar la palabra $w_i$ en un documento de la clase $c$. Esta probabilidad se estima mediante:
+
+$$
+P(w_i \mid c) = \frac{N_{ic} + \alpha}{N_c + \alpha V}
+$$
+
+- $N_{ic}$: número total de ocurrencias del término $w_i$ en los documentos de la clase $c$  
+- $N_c$: número total de palabras en los documentos de la clase $c$  
+- $V$: tamaño del vocabulario  
+- $\alpha$: parámetro de suavizado de Laplace (habitualmente $\alpha = 1$)  
+
+La predicción final se realiza entonces con:
+
+$$
+\hat{c} = \arg\max_c \left( \log P(c) + \sum_{i=1}^n x_i \log P(w_i \mid c) \right)
+$$
+
+
+### Métricas de evaluación
+
+Para evaluar el desempeño del modelo entrenado se utilizan las siguientes métricas:
+
+- **Accuracy**: proporción de predicciones correctas sobre el total de observaciones del conjunto de prueba:
+
+$$
+\text{Accuracy} = \frac{1}{N} \sum_{i=1}^{N} \mathbb{1}(y_i = \hat{y}_i)
+$$
+
+- **Matriz de confusión**: tabla que muestra el número de predicciones correctas e incorrectas para cada clase, permitiendo identificar patrones de error.
+
+- **Precisión (precision)**: proporción de verdaderos positivos sobre el total de predicciones positivas para una clase:
+
+$$
+\text{Precision}_c = \frac{\text{TP}_c}{\text{TP}_c + \text{FP}_c}
+$$
+
+- **Recall (sensibilidad)**: proporción de verdaderos positivos sobre el total de instancias reales de la clase:
+
+$$
+\text{Recall}_c = \frac{\text{TP}_c}{\text{TP}_c + \text{FN}_c}
+$$
+
+A continuación se presentan los resultados del modelo aplicados al conjunto de test, utilizando estas métricas.
+
+
+```{python}
+# 1: Entrene el modelo Multinomial Naive Bayes, luego utilícelo para predecir sobre el conjunto de test, y reporte el valor de accuracy y la matriz de confusión. Reporte el valor de precision y recall para cada candidato. 
+# Calcular matriz de confusión Sugerencia: utilice el método from_predictions de ConfusionMatrixDisplay para realizar la matriz.
+
+# Entrenamiento del modelo Multinomial Naive Bayes
+nb_model = MultinomialNB()
+nb_model.fit(X_dev_tfidf, y_dev)
+
+# Predicción sobre el conjunto de test
+X_test_tfidf = TfidfTransformer().fit_transform(vectorizer.transform(X_test))
+y_pred = nb_model.predict(X_test_tfidf)
+
+# Reporte de accuracy
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Accuracy del modelo Naive Bayes: {accuracy:.2f}")
+# Matriz de confusión
+cm = confusion_matrix(y_test, y_pred, labels=top_3_candidates)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=top_3_candidates)
+disp.plot(cmap=plt.cm.Blues)
+plt.title('Matriz de Confusión - Naive Bayes')
+plt.show()
+# Reporte de precision y recall
+precision = precision_score(y_test, y_pred, average=None, labels=top_3_candidates)
+recall = recall_score(y_test, y_pred, average=None, labels=top_3_candidates)
+from great_tables import GT
+import pandas as pd
+
+# Supongamos que ya tenés estas variables:
+df_metrics = pd.DataFrame({
+    "Candidato": top_3_candidates,
+    "Precisión": precision,
+    "Recall": recall
+})
+
+(
+    GT(df_metrics)
+    .cols_label(
+        Candidato="Candidato",
+        Precisión="Precisión",
+        Recall="Recall"
+    )
+    .fmt_number(columns=["Precisión", "Recall"], decimals=2)
+    .tab_header(
+        title="Evaluación del modelo Naive Bayes",
+        subtitle="Precisión y Recall por candidato"
+    )
+)
+    
+    
+```
+
+
+
+
+
+
+
+
+
