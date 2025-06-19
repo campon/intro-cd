@@ -9,6 +9,10 @@ execute:
   warning: false
 format: pdf
 lang: es
+bibliography: references.bib
+nocite: '@*'
+link-citations: true
+pdf-engine: lualatex
 ---
 
 
@@ -132,7 +136,7 @@ plt.grid(axis='y', alpha=0.5)
 sns.despine()  # Elimina borde superior y derecho
 
 plt.tight_layout()
-plt.savefig("fig-frecuencia-dicursos.png", dpi=300)
+plt.savefig("fig-frecuencia-dicursos.png", dpi=350)
 plt.close()
 
 ```
@@ -141,7 +145,7 @@ plt.close()
 ![Frecuencia de discursos por candidato (Campaña 2020).](fig-frecuencia-dicursos.png){ width=60% #fig-frecuencia-dicursos fig-pos='htpb'}
 :::
 
-La figura [@fig-frecuencia-dicursos] muestra la frecuencia de discursos por candidato en la campaña presidencial de Estados Unidos 2020. Se observa que Joe Biden y Donald Trump son los candidatos con mayor número de discursos, seguidos por Mike Pence, Bernie Sanders y Kamala Harris. Esta distribución refleja la actividad política y mediática de cada candidato durante la campaña.
+La [@fig-frecuencia-dicursos] muestra la frecuencia de discursos por candidato en la campaña presidencial de Estados Unidos 2020. Se observa que Joe Biden y Donald Trump son los candidatos con mayor número de discursos, seguidos por Mike Pence, Bernie Sanders y Kamala Harris. Esta distribución refleja la actividad política y mediática de cada candidato durante la campaña.
 
 ```{python}
 
@@ -155,7 +159,7 @@ df_speeches_top_3 = df_speeches_clean[
 
 ```
 
-Tras seleccionar los tres candidatos con más discursos: Joe Biden, Donald Trump y Mike Pence, se procede a dividir el conjunto de datos en dos partes: un conjunto de desarrollo (entrenamiento) y un conjunto de prueba (test). Esta división nos permite evaluar el rendimiento de los modelos de clasificación en datos no vistos, asegurando que las métricas obtenidas sean representativas del desempeño real del modelo. Para construir estos conjuntos, se utiliza un muestreo estratificado, garantizando que la proporción de discursos de cada candidato se mantenga en ambos conjuntos. Esto es crucial para evitar sesgos en el modelo y asegurar una evaluación justa. Observese la figura [@fig-frecuencia-test_train], que muestra la distribución de discursos por candidato en los conjuntos de desarrollo y prueba, confirmando que la proporción de discursos se mantiene constante entre ambos conjuntos.
+Tras seleccionar los tres candidatos con más discursos: Joe Biden, Donald Trump y Mike Pence, se procede a dividir el conjunto de datos en dos partes: un conjunto de desarrollo (entrenamiento) y un conjunto de prueba (test). Esta división nos permite evaluar el rendimiento de los modelos de clasificación en datos no vistos, asegurando que las métricas obtenidas sean representativas del desempeño real del modelo. Para construir estos conjuntos, se utiliza un muestreo estratificado, garantizando que la proporción de discursos de cada candidato se mantenga en ambos conjuntos. Esto es crucial para evitar sesgos en el modelo y asegurar una evaluación justa. Observese la [@fig-frecuencia-test_train], que muestra la distribución de discursos por candidato en los conjuntos de desarrollo y prueba, confirmando que la proporción de discursos se mantiene constante entre ambos conjuntos.
 
 ```{python}
 
@@ -251,7 +255,7 @@ def plot_candidate_distribution_relative(y_dev, y_test):
     plt.yticks(fontsize=9)
     plt.tight_layout()
     sns.despine()
-    plt.savefig("fig-frecuencia-test_train.png", dpi=300)
+    plt.savefig("fig-frecuencia-test_train.png", dpi=350)
     plt.close()
 
 plot_candidate_distribution_relative(y_dev, y_test)
@@ -355,7 +359,7 @@ X_dev_counts2 = vectorizer2.fit_transform(X_dev)
 # 4: Obtenga la representación numérica Term Frequency - Inverse Document Frequency.
 
 X_dev_tfidf = TfidfTransformer(use_idf=True).fit_transform(X_dev_counts)
-print(f"Dimensiones de la matriz TF-IDF: {X_dev_tfidf.shape}")
+#print(f"Dimensiones de la matriz TF-IDF: {X_dev_tfidf.shape}")
 
 X_dev_tfidf2 = TfidfTransformer(use_idf=True).fit_transform(X_dev_counts2)
 ```
@@ -391,7 +395,7 @@ plt.yticks(fontsize=9)
 plt.grid(alpha=0.3)
 sns.despine()
 plt.tight_layout()
-plt.savefig("fig-pca1.png", dpi=300)
+plt.savefig("fig-pca1.png", dpi=350)
 plt.close()
 
 ```
@@ -425,7 +429,7 @@ axes[1].set_xticks(range(1, 11))
 axes[1].tick_params(labelsize=9)
 
 plt.tight_layout()
-plt.savefig("fig-pca2.png", dpi=300)
+plt.savefig("fig-pca2.png", dpi=350)
 plt.close()
 ```
 
@@ -460,7 +464,7 @@ plt.yticks(fontsize=9)
 plt.grid(alpha=0.3)
 sns.despine()
 plt.tight_layout()
-plt.savefig("fig-pca3.png", dpi=300)
+plt.savefig("fig-pca3.png", dpi=350)
 plt.close()
 ```
 
@@ -493,7 +497,7 @@ axes[1].set_xticks(range(1, 11))
 axes[1].tick_params(labelsize=9)
 
 plt.tight_layout()
-plt.savefig("fig-pca4.png", dpi=300)
+plt.savefig("fig-pca4.png", dpi=350)
 plt.close()
 ```
 
@@ -510,7 +514,7 @@ En este caso se utiliza el modelo **Naive Bayes Multinomial**, ampliamente utili
 
 ### Naive Bayes Multinomial
 
-El modelo se basa en el **Teorema de Bayes**, que permite estimar la probabilidad de una clase $c$ dado un documento $d$:
+El modelo se basa en el **Teorema de Bayes** [@urafsky2023speech], que permite estimar la probabilidad de una clase $c$ dado un documento $d$:
 
 $$
 P(c \mid d) = \frac{P(c) \cdot P(d \mid c)}{P(d)}
@@ -537,7 +541,7 @@ $$
 - $N_{ic}$: número total de ocurrencias del término $w_i$ en los documentos de la clase $c$  
 - $N_c$: número total de palabras en los documentos de la clase $c$  
 - $V$: tamaño del vocabulario  
-- $\alpha$: parámetro de suavizado de Laplace (habitualmente $\alpha = 1$)  
+- $\alpha$: parámetro de suavizado
 
 La predicción final se realiza entonces con:
 
@@ -570,7 +574,7 @@ $$
 \text{Recall}_c = \frac{\text{TP}_c}{\text{TP}_c + \text{FN}_c}
 $$
 
-En la tabla [@fig-acc] se presentan los resultados del modelo aplicados al conjunto de test, utilizando las métricas mencionadas.
+En la tabla [@fig-acc] se presentan los resultados del modelo aplicados al conjunto de test, utilizando las métricas mencionadas, cabe mencionar que nos encontramos con un problema importante para clasificar los discursos de los candidatos ya que si consideramos las predicciones del conjunto de test todas son para Biden, esto se puede ver mas en detalle en la matriz de confusión mencionada posteriormente.
 
 ```{python}
 # 1: Entrene el modelo Multinomial Naive Bayes, luego utilícelo para predecir sobre el conjunto de test, y reporte el valor de accuracy y la matriz de confusión. Reporte el valor de precision y recall para cada candidato. 
@@ -594,7 +598,7 @@ cm = confusion_matrix(y_test, y_pred, labels=top_3_candidates)
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=top_3_candidates)
 disp.plot(cmap=plt.cm.Blues)
 #plt.title('Matriz de Confusión - Naive Bayes')
-plt.savefig("fig-naive.png", dpi=350)
+plt.savefig("fig-naive.png", dpi=350, bbox_inches="tight")
 plt.close()
 ```
 
@@ -631,7 +635,7 @@ df_metrics = pd.DataFrame({
     
 ```
 
-El **accuracy** del modelo sobre el conjunto de test resulta en un bajo valor de 0.49. En la figura [@fig-naive], se presenta la matriz de confusión, que muestra el número de aciertos y errores cometidos por el modelo al clasificar a cada candidato. Esta visualización permite identificar patrones sistemáticos de error, particularmente en la clasificación de los discursos de *Donald Trump* y *Mike Pence*, quienes no fueron correctamente identificados en ningún caso. Esto evidencia una limitada capacidad del modelo para distinguir entre ciertos oradores, lo que compromete su rendimiento en escenarios multiclase con discursos de estilos similares.
+El **accuracy** del modelo sobre el conjunto de test resulta en un bajo valor de 0.49. En la [@fig-naive], se presenta la matriz de confusión, que muestra el número de aciertos y errores cometidos por el modelo al clasificar a cada candidato. Esta visualización permite identificar patrones sistemáticos de error, particularmente en la clasificación de los discursos de *Donald Trump* y *Mike Pence*, quienes no fueron correctamente identificados en ningún caso. Esto evidencia una limitada capacidad del modelo para distinguir entre ciertos oradores, lo que compromete su rendimiento en escenarios multiclase con discursos de estilos similares.
 
 ::: {.cell-output-display}
 ![Matriz de Confusión Naive Bayes.](fig-naive.png){ width=67% #fig-naive fig-pos='htpb'}
@@ -639,15 +643,15 @@ El **accuracy** del modelo sobre el conjunto de test resulta en un bajo valor de
 
 
 
+**Validación Cruzada y Búsqueda de Hiperparámetros**
 
-\newpage
+La validación cruzada (cross-validation) es una técnica que evalúa el desempeño de un modelo dividiendo el conjunto de datos en k subconjuntos o folds. En cada iteración, el modelo se entrena en $k-1$ folds y se evalúa en el fold restante. Al promediar las métricas obtenidas en las k iteraciones se obtiene una estimación robusta del rendimiento, evitando así el sobreajuste provocado por depender de un único conjunto de validación.
+
+Para optimizar los hiperparámetros usamos GridSearchCV, el cual explora sistemáticamente todas las combinaciones de una cuadrícula de parámetros predefinida. En cada iteración de la validación cruzada se evalúa una combinación determinada, y se puede visualizar la distribución del accuracy (u otra métrica) mediante un gráfico de violín que muestre el valor promedio y la variabilidad en cada uno de los splits.
+
+La búsqueda de hiperparámetros es crucial para mejorar el rendimiento del modelo, ya que permite ajustar parámetros como la suavización ($\alpha$) y la inclusión de priors, que pueden influir significativamente en la capacidad del modelo para generalizar a nuevos datos. La cuadrícula definida para la búsqueda de hiperparámetros incluye valores de $\alpha$ que van desde 0.001 hasta 5.0, y la opción de ajustar el parámetro `fit_prior` para considerar o no las probabilidades a priori de las clases.
 
 
-## Validación Cruzada y Búsqueda de Hiperparámetros
-
-La validación cruzada (cross-validation) es una técnica que evalúa el desempeño de un modelo dividiendo el conjunto de datos en k subconjuntos o folds. En cada iteración, el modelo se entrena en k-1 folds y se evalúa en el fold restante. Al promediar las métricas obtenidas en las k iteraciones se obtiene una estimación robusta del rendimiento, evitando así el sobreajuste provocado por depender de un único conjunto de validación.
-
-Para optimizar los hiperparámetros usamos GridSearchCV, el cual explora sistemáticamente todas las combinaciones del espacio de parámetros especificado. En cada iteración de la validación cruzada se evalúa una combinación determinada, y se puede visualizar la distribución del accuracy (u otra métrica) mediante un gráfico de violín que muestre el valor promedio y la variabilidad en cada uno de los splits.
 
 ```{python}
 # 2: Implemente una búsqueda de hiperparámetros usando GridSearchCV.
@@ -665,8 +669,8 @@ grid_search = GridSearchCV(
     n_jobs=-1
 )
 grid_search.fit(X_dev_tfidf, y_dev)
-print("Mejores parámetros encontrados:")
-print(grid_search.best_params_)
+#print("Mejores parámetros encontrados:")
+#print(grid_search.best_params_)
 
 # Genere una visualización que permita comparar las métricas (e.g: accuracy) de los distintos modelos entrenados, viendo el valor promedio y variabilidad de las mismas en todos los splits (e.g: en un gráfico de violín).
 violin_data = pd.DataFrame(grid_search.cv_results_)
@@ -677,7 +681,7 @@ plt.xlabel('Alpha')
 plt.ylabel('Accuracy Promedio')
 plt.xticks(rotation=45)
 plt.grid()
-plt.savefig("fig-cv.png", dpi=300)
+plt.savefig("fig-cv.png", dpi=350, bbox_inches="tight")
 plt.close()
 ```
 
@@ -699,7 +703,7 @@ sns.set(style="white")  # Fondo blanco sin grilla
 
 # reporte de accuracy
 accuracy = accuracy_score(y_test, y_pred)
-print(f"Accuracy del modelo Naive Bayes: {accuracy:.2f}")
+#print(f"Accuracy del modelo Naive Bayes: {accuracy:.2f}")
 # matriz de confusión
 cm = confusion_matrix(y_test, y_pred, labels=top_3_candidates)
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=top_3_candidates)
@@ -712,7 +716,7 @@ recall = recall_score(y_test, y_pred, average=None, labels=top_3_candidates)
 #for candidate, prec, rec in zip(top_3_candidates, precision, recall):
 #    print(f"Candidato: {candidate}, Precision: {prec:.2f}, Recall: {rec:.2f}")
 
-plt.savefig("fig-cv2.png", dpi=350)
+plt.savefig("fig-cv2.png", dpi=350,bbox_inches="tight")
 plt.close()
 ```
 
@@ -724,16 +728,90 @@ plt.close()
 
 Una vez identificada la mejor combinación de hiperparámetros, se reentrena el modelo usando todo el conjunto de entrenamiento (sin apartar datos para validación). Se reportan las métricas finales, como accuracy, precision y recall, y se presenta la matriz de confusión. Es importante señalar que los modelos basados en representaciones bag-of-words o TF-IDF tienen limitaciones: ignoran el orden y contexto de las palabras y generan vectores de alta dimensionalidad y dispersos, lo que puede dificultar capturar relaciones semánticas complejas.
 
-## Evaluación de un Modelo Alternativo
+**Modelo Alternativo: Regresión Logística**
 
-Además del clasificador Multinomial Naive Bayes, se evaluó un modelo basado en Regresión Logística. Este modelo lineal estima la probabilidad de pertenecer a cada clase utilizando la función sigmoide y busca un hiperplano que separe las clases. A diferencia de Naive Bayes, no asume independencia entre las features, lo que puede permitir capturar relaciones lineales más sutiles. La comparación de resultados entre ambos modelos permite analizar cómo varían las métricas según el enfoque implementado.
+Además de Naive Bayes, se evaluó Regresión Logística, un modelo lineal que estima probabilidades usando softmax sobre combinaciones lineales de features.
+
+### Regresión Logística
+
+La Regresión Logística es un modelo lineal que estima las probabilidades de pertenencia a cada clase aplicando la función softmax sobre una combinación lineal de las features. Para cada clase c, se calcula:
+
+$$
+P(c \mid \mathbf{x}) = \frac{e^{\mathbf{w}_c^\top \mathbf{x} + b_c}}{\sum_{k} e^{\mathbf{w}_k^\top \mathbf{x} + b_k}}
+$$
+
+donde $\mathbf{w}_c$ y $b_c$ son los parámetros asociados a la clase c. Dicho modelo se entrena maximizando la verosimilitud, usualmente a través de métodos numéricos como el algoritmo de Newton-Raphson (NR), el cual ajusta iterativamente los pesos y el sesgo para maximizar la función de verosimilitud y acercar las probabilidades predichas a las etiquetas reales. A diferencia de Naive Bayes, que estima $P(x \mid c)$ y aplica la regla de Bayes, la Regresión Logística modela directamente la probabilidad condicional $P(c \mid \mathbf{x})$, permitiendo capturar interacciones lineales entre las variables.
+
+En este modelo existen dos hiperparámetros principales:
+
+- **C**: inverso de la regularización, controla la complejidad del modelo. Valores más altos permiten mayor flexibilidad, mientras que valores bajos penalizan más las magnitudes de los coeficientes. 
+
+- **penalty**: tipo de regularización a aplicar (L1, L2 o ninguna). La regularización L1 tiende a generar modelos más esparsos, mientras que L2 penaliza las magnitudes de los coeficientes sin forzarlos a cero. 
+
+Se define una cuadricula de valores de $C$ en [0.01, 0.1, 1, 10] en conjunto con las penalizaciones L1, L2 y elasticnet. Se utiliza el método de validación cruzada con 10 folds para evaluar el rendimiento del modelo en cada combinación de hiperparámetros. Posteriormente, se entrena el modelo con los mejores parámetros encontrados ($C = 10$ y $penalty=l2$) y se evalúa su rendimiento en el conjunto de test resultando en un accuracy del 98% donde el modelo logra clasificar correctamente todos los discursos de los candidatos a excepción de uno de Biden que lo confundió con Pence. 
+
+```{python}
+param_grid_lr = {
+    'C': [0.01, 0.1, 1, 10],
+    'penalty': ['l2', 'l1', 'elasticnet'],
+    'solver': ['lbfgs']
+}
+gr_lr = GridSearchCV(
+    LogisticRegression(max_iter=1000, random_state=42),
+    param_grid=param_grid_lr,
+    scoring='accuracy',
+    cv=10,
+    n_jobs=-1
+)
+gr_lr.fit(X_dev_tfidf, y_dev)
+
+disp_lr = ConfusionMatrixDisplay.from_estimator(
+    gr_lr.best_estimator_,
+    X_test_tfidf,
+    y_test,
+    display_labels=top_3_candidates,
+    cmap='Blues'
+)
+disp_lr.ax_.set_title('Matriz de Confusión - Logistic Regression (GridSearchCV)')
+plt.savefig("fig-logistic.png", dpi=350, bbox_inches="tight")
+plt.close()
+```
+
+::: {.cell-output-display}
+![Matriz de Confusión del modelo de Regresión Logística.](fig-logistic.png){ width=67% #fig-logistic fig-pos='htpb'}
+:::
+
+
 
 ## Consideraciones sobre (Des)balance y Extracción Alternativa de Features
 
 Al cambiar la selección de candidatos es posible observar problemas de balance en los datos, situación que puede sesgar las predicciones. Técnicas como el sobre-muestreo y el submuestreo son herramientas útiles para rebalancear la distribución de clases y mitigar este efecto, aunque no se implemente en este caso.
 
-Una técnica alternativa para extraer features de texto es utilizar embeddings de palabras, tales como Word2Vec, GloVe o modelos basados en Transformers (por ejemplo, BERT). Estas técnicas generan representaciones vectoriales densas que capturan información semántica y contextual, lo que se espera permita una mejor discriminación en tareas de clasificación en comparación con métodos basados únicamente en conteos (bag-of-words o TF-IDF).
+Una consideración adicional es que, en Python, la librería imbalanced-learn implementa diversas técnicas de remuestreo—entre ellas SMOTE y otras variantes—lo que facilita su integración en pipelines de scikit-learn para manejar el desbalance de clases.
 
+## Alternativas de Extracción de Features
+
+En el ámbito del procesamiento de lenguaje natural, existen diversas técnicas para representar texto como vectores numéricos. A continuación se describen algunas de las más relevantes:
+
+### Word2Vec
+Word2Vec (Mikolov et al., 2013) aprende vectores densos de palabras mediante modelos de Continuous Bag-of-Words (CBOW) o Skip-Gram, optimizando la predicción de palabras y su contexto. Cada palabra se representa como un vector de dimensión fija, donde la cercanía en el espacio refleja similitud semántica.
+
+**Diferencias vs. BoW/TF-IDF:** reducción de dimensionalidad, vectores densos que capturan relaciones semánticas y mejor generalización.
+
+### GloVe
+GloVe (Pennington et al., 2014) crea embeddings a partir de la factorización de una matriz de co-ocurrencia global de palabras. Los vectores resultantes preservan información tanto local (contexto de ventana) como global (distribución en el corpus).
+
+**Diferencias vs. Word2Vec:** incorpora estadísticas globales del corpus, lo que puede mejorar la representación de palabras infrecuentes; sigue siendo estático.
+
+### Embeddings Contextuales
+Modelos como BERT (Devlin et al., 2019) generan vectores dinámicos que dependen del contexto completo de la frase. Cada instancia de una palabra recibe un embedding distinto según su uso, capturando matices sintácticos y semánticos más profundos.
+
+**Diferencias vs. estáticos:** embeddings sensibles al contexto, mayor capacidad para desambiguar significados, a costa de mayor complejidad computacional.
+
+
+
+
+### Referencias {#references}
 
 
 
