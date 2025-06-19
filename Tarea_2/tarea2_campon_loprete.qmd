@@ -138,7 +138,7 @@ plt.close()
 ```
 
 ::: {.cell-output-display}
-![Frecuencia de discursos por candidato (Campaña 2020).](fig-frecuencia-dicursos.png){ width=60% #fig-frecuencia-dicursos fig-pos='t'}
+![Frecuencia de discursos por candidato (Campaña 2020).](fig-frecuencia-dicursos.png){ width=60% #fig-frecuencia-dicursos fig-pos='htpb'}
 :::
 
 La figura [@fig-frecuencia-dicursos] muestra la frecuencia de discursos por candidato en la campaña presidencial de Estados Unidos 2020. Se observa que Joe Biden y Donald Trump son los candidatos con mayor número de discursos, seguidos por Mike Pence, Bernie Sanders y Kamala Harris. Esta distribución refleja la actividad política y mediática de cada candidato durante la campaña.
@@ -258,7 +258,7 @@ plot_candidate_distribution_relative(y_dev, y_test)
 ```
 
 ::: {.cell-output-display}
-![Distribución de discursos por candidato y conjunto.](fig-frecuencia-test_train.png){ width=60% #fig-frecuencia-test_train fig-pos='t'}
+![Distribución de discursos por candidato y conjunto.](fig-frecuencia-test_train.png){ width=60% #fig-frecuencia-test_train fig-pos='htpb'}
 :::
 
 Para transformar el texto del conjunto de entrenamiento a una representación numérica se utilizó la técnica de Bag of Words (BoW), implementada a través del $\texttt{CountVectorizer}$ de $\texttt{scikit-learn}$. Esta técnica convierte cada documento en un vector donde cada componente representa la frecuencia absoluta de una palabra específica del vocabulario del corpus.
@@ -384,14 +384,23 @@ ax = sns.scatterplot(
 )
 plt.xlabel('Componente 1', fontsize=11)
 plt.ylabel('Componente 2', fontsize=11)
-plt.title('Proyección PCA sobre el conjunto de desarrollo (TF-IDF 1)', fontsize=13, weight='bold')
+#plt.title('Proyección PCA sobre el conjunto de desarrollo (TF-IDF 1)', fontsize=13, weight='bold')
 plt.legend(title='Candidato', fontsize=9, title_fontsize=10)
 plt.xticks(fontsize=9)
 plt.yticks(fontsize=9)
 plt.grid(alpha=0.3)
 sns.despine()
 plt.tight_layout()
-plt.show()
+plt.savefig("fig-pca1.png", dpi=300)
+plt.close()
+
+```
+
+::: {.cell-output-display}
+![Proyección PCA sobre el conjunto de desarrollo (TF-IDF 1).](fig-pca1.png){ width=60% #fig-pca1 fig-pos='htpb'}
+:::
+
+```{python}
 
 # Gráfico de varianza explicada
 fig, axes = plt.subplots(1, 2, figsize=(10, 5))
@@ -399,7 +408,7 @@ sns.set(style="whitegrid")
 
 # Acumulada
 axes[0].plot(range(1, 11), np.cumsum(pca.explained_variance_ratio_[:10]), marker='o', linestyle='-')
-axes[0].set_title('Varianza explicada acumulada (TF-IDF 1)', fontsize=12, weight='bold')
+#axes[0].set_title('Varianza explicada acumulada (TF-IDF 1)', fontsize=12, weight='bold')
 axes[0].set_xlabel('Número de componentes', fontsize=10)
 axes[0].set_ylabel('Varianza explicada acumulada', fontsize=10)
 axes[0].grid(alpha=0.3)
@@ -408,7 +417,7 @@ axes[0].tick_params(labelsize=9)
 
 # Individual
 axes[1].plot(range(1, 11), pca.explained_variance_ratio_[:10], marker='o', linestyle='-')
-axes[1].set_title('Varianza explicada por componente (TF-IDF 1)', fontsize=12, weight='bold')
+#axes[1].set_title('Varianza explicada por componente (TF-IDF 1)', fontsize=12, weight='bold')
 axes[1].set_xlabel('Número de componentes', fontsize=10)
 axes[1].set_ylabel('Varianza explicada', fontsize=10)
 axes[1].grid(alpha=0.3)
@@ -416,7 +425,16 @@ axes[1].set_xticks(range(1, 11))
 axes[1].tick_params(labelsize=9)
 
 plt.tight_layout()
-plt.show()
+plt.savefig("fig-pca2.png", dpi=300)
+plt.close()
+```
+
+::: {.cell-output-display}
+![Varianza explicada acumulada y por componente (TF-IDF 1).](fig-pca2.png){ width=75% #fig-pca2 fig-pos='htpb'}
+:::
+
+
+```{python}
 
 # PCA sobre X_dev_tfidf2
 pca2 = PCA(n_components=10)
@@ -435,22 +453,30 @@ ax = sns.scatterplot(
 )
 plt.xlabel('Componente 1', fontsize=11)
 plt.ylabel('Componente 2', fontsize=11)
-plt.title('Proyección PCA sobre el conjunto de desarrollo (TF-IDF 2)', fontsize=13, weight='bold')
+#plt.title('Proyección PCA sobre el conjunto de desarrollo (TF-IDF 2)', fontsize=13, weight='bold')
 plt.legend(title='Candidato', fontsize=9, title_fontsize=10)
 plt.xticks(fontsize=9)
 plt.yticks(fontsize=9)
 plt.grid(alpha=0.3)
 sns.despine()
 plt.tight_layout()
-plt.show()
+plt.savefig("fig-pca3.png", dpi=300)
+plt.close()
+```
 
+::: {.cell-output-display}
+![Proyección PCA sobre el conjunto de desarrollo (TF-IDF 2).](fig-pca3.png){ width=60% #fig-pca3 fig-pos='htpb'}
+:::
+
+
+```{python}
 # Gráfico de varianza explicada
 fig, axes = plt.subplots(1, 2, figsize=(10, 5))
 sns.set(style="whitegrid")
 
 # Acumulada
 axes[0].plot(range(1, 11), np.cumsum(pca2.explained_variance_ratio_[:10]), marker='o', linestyle='-')
-axes[0].set_title('Varianza explicada acumulada (TF-IDF 2)', fontsize=12, weight='bold')
+#axes[0].set_title('Varianza explicada acumulada (TF-IDF 2)', fontsize=12, weight='bold')
 axes[0].set_xlabel('Número de componentes', fontsize=10)
 axes[0].set_ylabel('Varianza explicada acumulada', fontsize=10)
 axes[0].grid(alpha=0.3)
@@ -459,7 +485,7 @@ axes[0].tick_params(labelsize=9)
 
 # Individual
 axes[1].plot(range(1, 11), pca2.explained_variance_ratio_[:10], marker='o', linestyle='-')
-axes[1].set_title('Varianza explicada por componente (TF-IDF 2)', fontsize=12, weight='bold')
+#axes[1].set_title('Varianza explicada por componente (TF-IDF 2)', fontsize=12, weight='bold')
 axes[1].set_xlabel('Número de componentes', fontsize=10)
 axes[1].set_ylabel('Varianza explicada', fontsize=10)
 axes[1].grid(alpha=0.3)
@@ -467,8 +493,13 @@ axes[1].set_xticks(range(1, 11))
 axes[1].tick_params(labelsize=9)
 
 plt.tight_layout()
-plt.show()
+plt.savefig("fig-pca4.png", dpi=300)
+plt.close()
 ```
+
+::: {.cell-output-display}
+![Varianza explicada acumulada y por componente (TF-IDF 2).](fig-pca4.png){ width=75% #fig-pca4 fig-pos='htpb'}
+:::
 
 
 ## Modelo de aprendizaje
@@ -539,8 +570,7 @@ $$
 \text{Recall}_c = \frac{\text{TP}_c}{\text{TP}_c + \text{FN}_c}
 $$
 
-A continuación se presentan los resultados del modelo aplicados al conjunto de test, utilizando estas métricas.
-
+En la tabla [@fig-acc] se presentan los resultados del modelo aplicados al conjunto de test, utilizando las métricas mencionadas.
 
 ```{python}
 # 1: Entrene el modelo Multinomial Naive Bayes, luego utilícelo para predecir sobre el conjunto de test, y reporte el valor de accuracy y la matriz de confusión. Reporte el valor de precision y recall para cada candidato. 
@@ -554,15 +584,23 @@ nb_model.fit(X_dev_tfidf, y_dev)
 X_test_tfidf = TfidfTransformer().fit_transform(vectorizer.transform(X_test))
 y_pred = nb_model.predict(X_test_tfidf)
 
+sns.set(style="white")
+
 # Reporte de accuracy
 accuracy = accuracy_score(y_test, y_pred)
-print(f"Accuracy del modelo Naive Bayes: {accuracy:.2f}")
+#print(f"Accuracy del modelo Naive Bayes: {accuracy:.2f}")
 # Matriz de confusión
 cm = confusion_matrix(y_test, y_pred, labels=top_3_candidates)
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=top_3_candidates)
 disp.plot(cmap=plt.cm.Blues)
-plt.title('Matriz de Confusión - Naive Bayes')
-plt.show()
+#plt.title('Matriz de Confusión - Naive Bayes')
+plt.savefig("fig-naive.png", dpi=350)
+plt.close()
+```
+
+```{python}
+#| label: fig-acc
+#| fig-cap: Métricas de precisión y recall del modelo Naive Bayes por candidato en el conjunto de test.
 # Reporte de precision y recall
 precision = precision_score(y_test, y_pred, average=None, labels=top_3_candidates)
 recall = recall_score(y_test, y_pred, average=None, labels=top_3_candidates)
@@ -584,20 +622,103 @@ df_metrics = pd.DataFrame({
         Recall="Recall"
     )
     .fmt_number(columns=["Precisión", "Recall"], decimals=2)
-    .tab_header(
-        title="Evaluación del modelo Naive Bayes",
-        subtitle="Precisión y Recall por candidato"
-    )
+    #.tab_header(
+        #title="Evaluación del modelo Naive Bayes",
+        #subtitle="Precisión y Recall por candidato"
+    #)
 )
     
     
 ```
+
+El **accuracy** del modelo sobre el conjunto de test resulta en un bajo valor de 0.49. En la figura [@fig-naive], se presenta la matriz de confusión, que muestra el número de aciertos y errores cometidos por el modelo al clasificar a cada candidato. Esta visualización permite identificar patrones sistemáticos de error, particularmente en la clasificación de los discursos de *Donald Trump* y *Mike Pence*, quienes no fueron correctamente identificados en ningún caso. Esto evidencia una limitada capacidad del modelo para distinguir entre ciertos oradores, lo que compromete su rendimiento en escenarios multiclase con discursos de estilos similares.
+
+::: {.cell-output-display}
+![Matriz de Confusión Naive Bayes.](fig-naive.png){ width=67% #fig-naive fig-pos='htpb'}
+:::
+
+
+
+
+\newpage
+
 
 ## Validación Cruzada y Búsqueda de Hiperparámetros
 
 La validación cruzada (cross-validation) es una técnica que evalúa el desempeño de un modelo dividiendo el conjunto de datos en k subconjuntos o folds. En cada iteración, el modelo se entrena en k-1 folds y se evalúa en el fold restante. Al promediar las métricas obtenidas en las k iteraciones se obtiene una estimación robusta del rendimiento, evitando así el sobreajuste provocado por depender de un único conjunto de validación.
 
 Para optimizar los hiperparámetros usamos GridSearchCV, el cual explora sistemáticamente todas las combinaciones del espacio de parámetros especificado. En cada iteración de la validación cruzada se evalúa una combinación determinada, y se puede visualizar la distribución del accuracy (u otra métrica) mediante un gráfico de violín que muestre el valor promedio y la variabilidad en cada uno de los splits.
+
+```{python}
+# 2: Implemente una búsqueda de hiperparámetros usando GridSearchCV.
+
+GridSearchCV_params = {
+    'alpha': [0.001, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0],
+    'fit_prior': [True, False]
+}
+grid_search = GridSearchCV(
+    MultinomialNB(),
+    param_grid=GridSearchCV_params,
+    scoring='accuracy',
+    cv=5,
+    verbose=0,
+    n_jobs=-1
+)
+grid_search.fit(X_dev_tfidf, y_dev)
+print("Mejores parámetros encontrados:")
+print(grid_search.best_params_)
+
+# Genere una visualización que permita comparar las métricas (e.g: accuracy) de los distintos modelos entrenados, viendo el valor promedio y variabilidad de las mismas en todos los splits (e.g: en un gráfico de violín).
+violin_data = pd.DataFrame(grid_search.cv_results_)
+plt.figure(figsize=(12, 6))
+sns.violinplot(x='param_alpha', y='mean_test_score', data=violin_data, inner='quartile')
+#plt.title('Comparación de Accuracy por Parámetro Alpha en GridSearchCV')
+plt.xlabel('Alpha')
+plt.ylabel('Accuracy Promedio')
+plt.xticks(rotation=45)
+plt.grid()
+plt.savefig("fig-cv.png", dpi=300)
+plt.close()
+```
+
+::: {.cell-output-display}
+![Comparación de Accuracy por Parámetro Alpha del Cross Validation.](fig-cv.png){ width=80% #fig-cv fig-pos='htpb'}
+:::
+
+```{python}
+# entrenamiento del modelo Multinomial Naive Bayes bajo el resultado de GridSearchCV
+nb_model = MultinomialNB(alpha=0.01, fit_prior=True)
+nb_model.fit(X_dev_tfidf, y_dev)
+
+# Predicción sobre el conjunto de test
+X_test_tfidf = TfidfTransformer().fit_transform(vectorizer.transform(X_test))
+y_pred = nb_model.predict(X_test_tfidf)
+
+# set sns set to none
+sns.set(style="white")  # Fondo blanco sin grilla
+
+# reporte de accuracy
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Accuracy del modelo Naive Bayes: {accuracy:.2f}")
+# matriz de confusión
+cm = confusion_matrix(y_test, y_pred, labels=top_3_candidates)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=top_3_candidates)
+disp.plot(cmap=plt.cm.Blues)
+#plt.title('Matriz de Confusión - Naive Bayes')
+
+# reporte de precision y recall
+precision = precision_score(y_test, y_pred, average=None, labels=top_3_candidates)
+recall = recall_score(y_test, y_pred, average=None, labels=top_3_candidates)
+#for candidate, prec, rec in zip(top_3_candidates, precision, recall):
+#    print(f"Candidato: {candidate}, Precision: {prec:.2f}, Recall: {rec:.2f}")
+
+plt.savefig("fig-cv2.png", dpi=350)
+plt.close()
+```
+
+::: {.cell-output-display}
+![Matriz de Confusión del Naive Bayes bajo optimización de Hiperparámetros.](fig-cv2.png){ width=67% #fig-cv2 fig-pos='htpb'}
+:::
 
 ## Selección del Mejor Modelo y Retrenamiento Completo
 
