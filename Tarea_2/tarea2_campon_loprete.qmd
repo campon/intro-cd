@@ -52,18 +52,18 @@ df_speeches = pd.read_csv('../data/us_2020_election_speeches.csv')
 
 ## Introducción
 
-La tarea 1 se centró en el análisis cuantitativo de 269 discursos políticos correspondientes a la campaña presidencial de Estados Unidos en 2020, de los cuales se seleccionan los cinco oradores con mayor número de intervenciones (Joe Biden, Donald Trump, Mike Pence, Bernie Sanders y Kamala Harris). A través de un primer barrido de datos faltantes y una inspección manual de calidad, se confirma que la información es suficientemente completa y homogénea para emprender un estudio riguroso de patrones de publicación y contenido verbal.
+Este análisis explora 269 discursos políticos recogidos durante la campaña presidencial de Estados Unidos en 2020. Se han seleccionado los cinco oradores con mayor cantidad de intervenciones (Joe Biden, Donald Trump, Mike Pence, Bernie Sanders y Kamala Harris) tras confirmar, mediante una revisión automatizada y manual, que los datos son lo suficientemente completos y homogéneos para un estudio riguroso de patrones de publicación y análisis textual.
 
-La base incluye seis variables: tres categóricas (*speaker*, *type*, *location*), dos de texto (*title*, *text*) y una temporal (*date*). Se observa un total de 269 registros, distribuídos entre el 15 de enero y el 16 de octubre de 2020. Para preparar el corpus, se incorpora una función para limpiar y normalizar el texto, que incluye los siguientes pasos:
+La base de datos incluye seis variables: tres categóricas (*speaker*, *type*, *location*), dos de texto (*title*, *text*) y una temporal (*date*). Los registros comprenden intervenciones realizadas entre el 15 de enero y el 16 de octubre de 2020. Para preparar el corpus se implementó una función de limpieza que:
 
-1. Elimina la introducción inicial del texto, quitando todo el contenido hasta el primer salto de línea (\\n), lo cual remueve encabezados redundantes o repeticiones del orador.
-2. Convierte todo el texto a minúsculas, asegurando uniformidad léxica para evitar duplicación artificial de palabras debido a diferencias de mayúsculas/minúsculas.
-3. Elimina marcas de tiempo entre paréntesis, como (00:01) o (1:05:12), que pueden aparecer por transcripciones automáticas o videos.
-4. Suprime encabezados del orador, como "joe biden:", "donald trump:", etc., incluyendo espacios y versiones como "president trump", para evitar que inflen las frecuencias de palabras irrelevantes al contenido.
-5. Elimina signos de puntuación seleccionados, incluyendo: `[ ]`, `„`, `:`, `?`, `.`, `!`, `;`, comillas dobles y simples, así como saltos de línea adicionales.
-6. Normaliza los espacios en blanco, reemplazando múltiples espacios por uno solo y eliminando espacios al inicio y al final del texto.
+1. Elimina la introducción redundante en el texto, suprimiendo el contenido previo al primer salto de línea.
+2. Convierte todo el texto a minúsculas para evitar duplicaciones por diferencias de mayúsculas.
+3. Elimina marcas de tiempo (por ejemplo, (00:01) o (1:05:12)) comunes en transcripciones automáticas.
+4. Suprime encabezados de oradores (como "joe biden:" o "president trump") para evitar distorsiones en el conteo de palabras.
+5. Quita signos de puntuación innecesarios y espacios adicionales.
 
-Estos pasos aseguran un vocabulario depurado y uniforme, indispensable para posteriores análisis de frecuencias, sentimiento o co‐ocurrencias de términos.
+Esta cadena de transformaciones permite obtener un vocabulario depurado y coherente que resulta indispensable para análisis posteriores como el estudio de frecuencias, sentimientos o co‐ocurrencias de términos.
+
 
 ```{python}
 
@@ -264,20 +264,6 @@ plot_candidate_distribution_relative(y_dev, y_test)
 Para transformar el texto del conjunto de entrenamiento a una representación numérica se utilizó la técnica de Bag of Words (BoW), implementada a través del $\texttt{CountVectorizer}$ de $\texttt{scikit-learn}$. Esta técnica convierte cada documento en un vector donde cada componente representa la frecuencia absoluta de una palabra específica del vocabulario del corpus.
 
 BoW parte del supuesto de que el orden de las palabras no importa. Se construye una matriz $D×V$, donde, 4 es la cantidad de discursos (filas), $V$ es el tamaño del vocabulario total (columnas), y cada celda $[i,j]$ contiene el número de veces que la palabra $j$ aparece en el documento $i$.
-
-En otras palabras, cada documento se representa como un vector de conteo de palabras, sin importar su contexto o posición.
-
-Se transforma el conjunto de entrenamiento de dos maneras:
-
-a. Unigramas incluyendo stopwords
-No se eliminan palabras vacías (stopwords), por lo que el vocabulario es más amplio pero contiene muchas palabras con poca capacidad discriminativa. Entre los 100 discursos existen 13.704 palabras únicas (unigramas) en el corpus. La matriz resultante tiene una proporción de entradas no nulas: ~0.0889.
-
-b. Unigramas + bigramas, excluyendo stopwords en inglés
-Se remueven stopwords usando la lista estándar del idioma inglés y se incluyen también combinaciones de dos palabras (bigramas), lo cual expande el tamaño del vocabulario pero aporta información contextual más rica. La dimensión de la matriz resulta en los 100 discursos, 197.501 combinaciones de bigramas — es decir, un vocabulario muchísimo más grande al incorporar combinaciones de dos palabras. La matriz resultante tiene una proporción de entradas no nulas: ~0.0197.
-
-Un n-grama es una secuencia contigua de n palabras extraídas de un texto. Por ejemplo, si n = 1, se generan unigramas (palabras individuales), mientras que si n = 2, se obtienen bigramas (pares de palabras consecutivas). Esta técnica permite incorporar información sobre el contexto local en el que aparecen las palabras, lo cual puede ser útil para tareas de clasificación o análisis de contenido.
-
-A partir de estos n-gramas, se construye una representación numérica conocida como TF-IDF (Term Frequency - Inverse Document Frequency). Esta transformación convierte cada documento en un vector donde cada posición representa un término del vocabulario, ponderado de acuerdo a su relevancia. La frecuencia de término (TF) mide cuántas veces aparece una palabra en un documento, mientras que la frecuencia inversa de documento (IDF) penaliza aquellas palabras que aparecen en muchos documentos, ya que aportan poca información distintiva. En conjunto, esta transformación resalta los términos que son importantes en un documento específico pero poco frecuentes en el resto del corpus.
 
 En otras palabras, cada documento se representa como un vector de conteo de palabras, sin importar su contexto o posición.
 
@@ -606,6 +592,26 @@ df_metrics = pd.DataFrame({
     
     
 ```
+
+## Validación Cruzada y Búsqueda de Hiperparámetros
+
+La validación cruzada (cross-validation) es una técnica que evalúa el desempeño de un modelo dividiendo el conjunto de datos en k subconjuntos o folds. En cada iteración, el modelo se entrena en k-1 folds y se evalúa en el fold restante. Al promediar las métricas obtenidas en las k iteraciones se obtiene una estimación robusta del rendimiento, evitando así el sobreajuste provocado por depender de un único conjunto de validación.
+
+Para optimizar los hiperparámetros usamos GridSearchCV, el cual explora sistemáticamente todas las combinaciones del espacio de parámetros especificado. En cada iteración de la validación cruzada se evalúa una combinación determinada, y se puede visualizar la distribución del accuracy (u otra métrica) mediante un gráfico de violín que muestre el valor promedio y la variabilidad en cada uno de los splits.
+
+## Selección del Mejor Modelo y Retrenamiento Completo
+
+Una vez identificada la mejor combinación de hiperparámetros, se reentrena el modelo usando todo el conjunto de entrenamiento (sin apartar datos para validación). Se reportan las métricas finales, como accuracy, precision y recall, y se presenta la matriz de confusión. Es importante señalar que los modelos basados en representaciones bag-of-words o TF-IDF tienen limitaciones: ignoran el orden y contexto de las palabras y generan vectores de alta dimensionalidad y dispersos, lo que puede dificultar capturar relaciones semánticas complejas.
+
+## Evaluación de un Modelo Alternativo
+
+Además del clasificador Multinomial Naive Bayes, se evaluó un modelo basado en Regresión Logística. Este modelo lineal estima la probabilidad de pertenecer a cada clase utilizando la función sigmoide y busca un hiperplano que separe las clases. A diferencia de Naive Bayes, no asume independencia entre las features, lo que puede permitir capturar relaciones lineales más sutiles. La comparación de resultados entre ambos modelos permite analizar cómo varían las métricas según el enfoque implementado.
+
+## Consideraciones sobre (Des)balance y Extracción Alternativa de Features
+
+Al cambiar la selección de candidatos es posible observar problemas de balance en los datos, situación que puede sesgar las predicciones. Técnicas como el sobre-muestreo y el submuestreo son herramientas útiles para rebalancear la distribución de clases y mitigar este efecto, aunque no se implemente en este caso.
+
+Una técnica alternativa para extraer features de texto es utilizar embeddings de palabras, tales como Word2Vec, GloVe o modelos basados en Transformers (por ejemplo, BERT). Estas técnicas generan representaciones vectoriales densas que capturan información semántica y contextual, lo que se espera permita una mejor discriminación en tareas de clasificación en comparación con métodos basados únicamente en conteos (bag-of-words o TF-IDF).
 
 
 
