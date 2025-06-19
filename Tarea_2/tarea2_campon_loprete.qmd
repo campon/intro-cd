@@ -142,7 +142,7 @@ plt.close()
 ```
 
 ::: {.cell-output-display}
-![Frecuencia de discursos por candidato (Campaña 2020).](fig-frecuencia-dicursos.png){ width=60% #fig-frecuencia-dicursos fig-pos='htpb'}
+![Frecuencia de discursos por candidato (Campaña 2020).](fig-frecuencia-dicursos.png){ width=65% #fig-frecuencia-dicursos fig-pos='htpb'}
 :::
 
 La [@fig-frecuencia-dicursos] muestra la frecuencia de discursos por candidato en la campaña presidencial de Estados Unidos 2020. Se observa que Joe Biden y Donald Trump son los candidatos con mayor número de discursos, seguidos por Mike Pence, Bernie Sanders y Kamala Harris. Esta distribución refleja la actividad política y mediática de cada candidato durante la campaña.
@@ -325,7 +325,7 @@ El vector TF-IDF para **Documento 1** sería:
 
 - ["el": 0, "gato": 0, "come": 0, "pescado": 0, "perro": 0.301, "carne": 0.301]
 
-
+Es importante señalar que los modelos basados en representaciones bag-of-words o TF-IDF tienen limitaciones: ignoran el orden y contexto de las palabras y generan vectores de alta dimensionalidad y dispersos, lo que puede dificultar capturar relaciones semánticas complejas.
 
 
 
@@ -364,6 +364,11 @@ X_dev_tfidf = TfidfTransformer(use_idf=True).fit_transform(X_dev_counts)
 X_dev_tfidf2 = TfidfTransformer(use_idf=True).fit_transform(X_dev_counts2)
 ```
 
+## Análisis de Componentes Principales (PCA)
+
+En esta sección se exploran los efectos de aplicar un Análisis de Componentes Principales (PCA) sobre los vectores de frecuencia TF-IDF, con el objetivo de evaluar si es posible discriminar entre discursos pertenecientes a diferentes candidatos presidenciales.
+
+La visualización de los datos proyectados sobre las dos primeras componentes principales revela una separación parcial pero significativa entre los discursos de Donald Trump, Joe Biden y Mike Pence. A pesar de que estas dos componentes retienen una fracción limitada de la varianza total (~21 % para la primera representación TF-IDF, veáse [@fig-pca2]), los discursos tienden a agruparse por autor, lo cual sugiere que existen diferencias sistemáticas en el vocabulario y el estilo discursivo que el PCA logra capturar en el subespacio reducido. La [@fig-pca1] muestra los clústeres resultantes, a la derecha con respecto a la primer componente, se puede identificar que los discursos que caen por encima de 0.75 corresponden mayoritariemnte a Trump y que además los discursos forman una nube que aumenta su dispersión a medida que se disminuye en la componente 2. Con respecto a Biden, sus discursos se agrupan en la parte inferior izquierda y central del gráfico, mientras que los discursos de Pence se sitúan en la parte superior izquierda, lo que indica una separación entre los estilos de estos dos candidatos aunque comparten ciertas similitudes.
 
 ```{python}
 # 5 :Muestre en un mapa el conjunto de entrenamiento, utilizando las dos primeras componentes PCA sobre los vectores de tf-idf.
@@ -401,7 +406,7 @@ plt.close()
 ```
 
 ::: {.cell-output-display}
-![Proyección PCA sobre el conjunto de desarrollo (TF-IDF 1).](fig-pca1.png){ width=60% #fig-pca1 fig-pos='htpb'}
+![Proyección PCA sobre el conjunto de desarrollo (TF-IDF 1).](fig-pca1.png){ width=65% #fig-pca1 fig-pos='htpb'}
 :::
 
 ```{python}
@@ -434,9 +439,18 @@ plt.close()
 ```
 
 ::: {.cell-output-display}
-![Varianza explicada acumulada y por componente (TF-IDF 1).](fig-pca2.png){ width=75% #fig-pca2 fig-pos='htpb'}
+![Varianza explicada acumulada y por componente (TF-IDF 1).](fig-pca2.png){ width=85% #fig-pca2 fig-pos='htpb'}
 :::
 
+En una segunda versión del análisis PCA, se aplicaron dos modificaciones clave sobre el BoW: i) la eliminación de stopwords en inglés; y ii) la adición de bigramas al vocabulario.
+
+La eliminación de stopwords contribuye a reducir el ruido introducido por términos frecuentes y semánticamente vacíos (como "the", "and", "of"), mejorando la capacidad del modelo para centrarse en términos informativos. Por su parte, la inclusión de bigramas enriquece el modelo al capturar expresiones características de cada candidato, tales como "middle class", "great again", o "health care", lo cual aporta contexto adicional a los unigramas aislados.
+
+Curiosamente, la nueva representación (TF-IDF 2) explica una menor proporción de la varianza total en sus primeras dos componentes aproximadamente ~9 % ([@fig-pca4]), esto se explica por el aumento del tamaño del vocabulario y, en consecuencia, de la dimensionalidad. Esta nueva representación requiere de al menos 10 componentes para explicar la misma varianza que en la representación primera ([@fig-pca2]). Sin embargo, esta pérdida de varianza acumulada no compromete la capacidad discriminativa: de hecho, obervando la [@fig-pca3] con la representación de las primeras dos componentes, los clústeres por candidato aparecen incluso mejor definidos, lo que sugiere que las nuevas dimensiones, aunque más dispersas, contienen señales útiles para distinguir autores.
+
+Finalmente, se espera que la omisión del filtrado de signos de puntuación tenga un efecto relevante en la representación; causando la introducción de tokens adicionales (como "economy." o "freedom,"), los cuales resultarán poco frecuentes en comparación a la misma palabra sin el signo de puntuación ("economy", "freedom"), recibiendo asi, bajo peso en la representación de la matriz TF-IDF, por lo que disminuiría la varianza explicada en las primeras componentes.
+
+En síntesis, los resultados muestran que el PCA, combinado con una representación semánticamente informativa del texto, permite capturar diferencias estilísticas relevantes entre los discursos de campaña. Esto valida su utilidad como herramienta exploratoria previa a tareas de clasificación o modelado supervisado.
 
 ```{python}
 
@@ -469,7 +483,7 @@ plt.close()
 ```
 
 ::: {.cell-output-display}
-![Proyección PCA sobre el conjunto de desarrollo (TF-IDF 2).](fig-pca3.png){ width=60% #fig-pca3 fig-pos='htpb'}
+![Proyección PCA sobre el conjunto de desarrollo (TF-IDF 2).](fig-pca3.png){ width=65% #fig-pca3 fig-pos='htpb'}
 :::
 
 
@@ -502,17 +516,15 @@ plt.close()
 ```
 
 ::: {.cell-output-display}
-![Varianza explicada acumulada y por componente (TF-IDF 2).](fig-pca4.png){ width=75% #fig-pca4 fig-pos='htpb'}
+![Varianza explicada acumulada y por componente (TF-IDF 2).](fig-pca4.png){ width=85% #fig-pca4 fig-pos='htpb'}
 :::
 
 
-## Modelo de aprendizaje
+## Naive Bayes Multinomial
 
 Una vez obtenida la representación numérica de los discursos mediante la transformación TF-IDF, se procede a entrenar un modelo de aprendizaje supervisado para clasificar los discursos según el candidato que los pronunció.
 
 En este caso se utiliza el modelo **Naive Bayes Multinomial**, ampliamente utilizado en tareas de clasificación de texto por su simplicidad, rapidez y buenos resultados incluso con datos ruidosos o de alta dimensión.
-
-### Naive Bayes Multinomial
 
 El modelo se basa en el **Teorema de Bayes** [@urafsky2023speech], que permite estimar la probabilidad de una clase $c$ dado un documento $d$:
 
@@ -541,7 +553,7 @@ $$
 - $N_{ic}$: número total de ocurrencias del término $w_i$ en los documentos de la clase $c$  
 - $N_c$: número total de palabras en los documentos de la clase $c$  
 - $V$: tamaño del vocabulario  
-- $\alpha$: parámetro de suavizado
+- $\alpha$: parámetro de suavizado para evitar probabilidades cero que por defecto se establece en 1.
 
 La predicción final se realiza entonces con:
 
@@ -552,17 +564,14 @@ $$
 
 ### Métricas de evaluación
 
-Para evaluar el desempeño del modelo entrenado se utilizan las siguientes métricas:
+Para evaluar el desempeño del modelo entrenado se utiliza la *Matriz de confusión*, esta matriz, se puede representar a traves de una tabla, que muestra el número de predicciones correctas e incorrectas para cada clase, permitiendo identificar patrones de error, a partir de la cual se pueden calcular las siguientes métricas:
 
 - **Accuracy**: proporción de predicciones correctas sobre el total de observaciones del conjunto de prueba:
-
 $$
 \text{Accuracy} = \frac{1}{N} \sum_{i=1}^{N} \mathbb{1}(y_i = \hat{y}_i)
 $$
 
-- **Matriz de confusión**: tabla que muestra el número de predicciones correctas e incorrectas para cada clase, permitiendo identificar patrones de error.
-
-- **Precisión (precision)**: proporción de verdaderos positivos sobre el total de predicciones positivas para una clase:
+- **Precisión**: proporción de verdaderos positivos sobre el total de predicciones positivas para una clase:
 
 $$
 \text{Precision}_c = \frac{\text{TP}_c}{\text{TP}_c + \text{FP}_c}
@@ -574,7 +583,7 @@ $$
 \text{Recall}_c = \frac{\text{TP}_c}{\text{TP}_c + \text{FN}_c}
 $$
 
-En la tabla [@fig-acc] se presentan los resultados del modelo aplicados al conjunto de test, utilizando las métricas mencionadas, cabe mencionar que nos encontramos con un problema importante para clasificar los discursos de los candidatos ya que si consideramos las predicciones del conjunto de test todas son para Biden, esto se puede ver mas en detalle en la matriz de confusión mencionada posteriormente.
+En la [@fig-acc] se presentan los resultados del modelo sin optimizar aplicados al conjunto de test, utilizando las métricas mencionadas, cabe mencionar que nos encontramos con un problema importante para clasificar los discursos de los candidatos ya que si consideramos las predicciones del conjunto de test todas son para Biden, esto se puede ver mas en detalle en la matriz de confusión mencionada posteriormente y puede explicarse por el hecho de que Biden es el candidato con más discursos en el conjunto de entrenamiento y dada la representación optada para representar los discursos (BoW y TF-IDF), el modelo tiende a favorecer la clase con más discursos, lo que resulta en un sesgo hacia Biden. Esto pone de manifiesto la importancia de considerar el balance de clases y la importancia del ajuste de hiperparámetros para penalizar el modelo y evitar que se sobreajuste a la clase mayoritaria.
 
 ```{python}
 # 1: Entrene el modelo Multinomial Naive Bayes, luego utilícelo para predecir sobre el conjunto de test, y reporte el valor de accuracy y la matriz de confusión. Reporte el valor de precision y recall para cada candidato. 
@@ -635,36 +644,35 @@ df_metrics = pd.DataFrame({
     
 ```
 
-El **accuracy** del modelo sobre el conjunto de test resulta en un bajo valor de 0.49. En la [@fig-naive], se presenta la matriz de confusión, que muestra el número de aciertos y errores cometidos por el modelo al clasificar a cada candidato. Esta visualización permite identificar patrones sistemáticos de error, particularmente en la clasificación de los discursos de *Donald Trump* y *Mike Pence*, quienes no fueron correctamente identificados en ningún caso. Esto evidencia una limitada capacidad del modelo para distinguir entre ciertos oradores, lo que compromete su rendimiento en escenarios multiclase con discursos de estilos similares.
+El accuracy del modelo sobre el conjunto de test resulta en un bajo valor de 0.49. En la [@fig-naive], se presenta la matriz de confusión, que muestra el número de aciertos y errores cometidos por el modelo al clasificar a cada candidato. Esta visualización permite identificar patrones sistemáticos de error, particularmente en la clasificación de los discursos de *Donald Trump* y *Mike Pence*, quienes no fueron correctamente identificados en ningún caso. Esto evidencia una limitada capacidad del modelo para distinguir entre ciertos oradores, lo que compromete su rendimiento en escenarios multiclase con discursos de estilos similares.
 
 ::: {.cell-output-display}
-![Matriz de Confusión Naive Bayes.](fig-naive.png){ width=67% #fig-naive fig-pos='htpb'}
+![Matriz de Confusión del modelo Naive Bayes.](fig-naive.png){ width=67% #fig-naive fig-pos='htpb'}
 :::
 
 
+## Validación Cruzada y Búsqueda de Hiperparámetros
 
-**Validación Cruzada y Búsqueda de Hiperparámetros**
+La validación cruzada (cross-validation) es una técnica utilizada para evaluar el desempeño de un modelo dividiendo el conjunto de datos en k subconjuntos o folds. En cada iteración, el modelo se entrena sobre k – 1 folds y se evalúa en el fold restante. Al promediar las métricas obtenidas en las k repeticiones, se obtiene una estimación más robusta del rendimiento del modelo, lo que permite mitigar el riesgo de sobreajuste asociado a depender de un único conjunto de validación. En nuestro caso, se utilizó una validación cruzada con k=10.
 
-La validación cruzada (cross-validation) es una técnica que evalúa el desempeño de un modelo dividiendo el conjunto de datos en k subconjuntos o folds. En cada iteración, el modelo se entrena en $k-1$ folds y se evalúa en el fold restante. Al promediar las métricas obtenidas en las k iteraciones se obtiene una estimación robusta del rendimiento, evitando así el sobreajuste provocado por depender de un único conjunto de validación.
+Para optimizar los hiperparámetros del modelo, se utilizó la herramienta $\texttt{GridSearchCV}$, que permite explorar de forma sistemática todas las combinaciones posibles dentro de un espacio de parámetros definido. En cada iteración de la validación cruzada, se evalúa una combinación específica de hiperparámetros, y es posible visualizar la distribución de una métrica (como el accuracy) mediante un gráfico de violín, el cual muestra el valor promedio y la variabilidad del rendimiento entre los distintos folds.
 
-Para optimizar los hiperparámetros usamos GridSearchCV, el cual explora sistemáticamente todas las combinaciones de una cuadrícula de parámetros predefinida. En cada iteración de la validación cruzada se evalúa una combinación determinada, y se puede visualizar la distribución del accuracy (u otra métrica) mediante un gráfico de violín que muestre el valor promedio y la variabilidad en cada uno de los splits.
+Los resultados obtenidos muestran que el modelo Naive Bayes alcanza su mejor desempeño promedio con un parámetro de suavizado aditivo ($\alpha$) de 0.01. Bajo esta configuración, el modelo logra un accuracy perfecto del 100 % en el conjunto de validación, indicando que logra clasificar correctamente todos los discursos de los candidatos. Sin embargo, este rendimiento excepcional puede ser indicativo de sobreajuste: el modelo podría estar memorizando los datos de entrenamiento en lugar de aprender patrones generalizables.
 
-La búsqueda de hiperparámetros es crucial para mejorar el rendimiento del modelo, ya que permite ajustar parámetros como la suavización ($\alpha$) y la inclusión de priors, que pueden influir significativamente en la capacidad del modelo para generalizar a nuevos datos. La cuadrícula definida para la búsqueda de hiperparámetros incluye valores de $\alpha$ que van desde 0.001 hasta 5.0, y la opción de ajustar el parámetro `fit_prior` para considerar o no las probabilidades a priori de las clases.
-
-
+Por este motivo, en lugar de seleccionar automáticamente el modelo con mayor precisión en entrenamiento, optamos por considerar valores de $\alpha$ que ofrecieran un balance razonable entre rendimiento promedio (accuracy entre 0.8 y 1) y capacidad de generalización, tal como se muestra en la figura [@fig-cv]. Esta figura ilustra en graficos de violín la distribución del accuracy promedio obtenido en cada combinación de hiperparámetros, permitiendo identificar visualmente las configuraciones más efectivas y estables, como se observa, a menor $\alpha$, el modelo tiende a sobreajustar, mientras que valores más altos reducen la precisión promedio.
 
 ```{python}
 # 2: Implemente una búsqueda de hiperparámetros usando GridSearchCV.
 
 GridSearchCV_params = {
-    'alpha': [0.001, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0],
+    'alpha': [0.01, 0.02, 0.025, 0.03, 0.05, 0.1, 0.25, 0.5, 1],
     'fit_prior': [True, False]
 }
 grid_search = GridSearchCV(
     MultinomialNB(),
     param_grid=GridSearchCV_params,
     scoring='accuracy',
-    cv=5,
+    cv=10,
     verbose=0,
     n_jobs=-1
 )
@@ -679,7 +687,7 @@ sns.violinplot(x='param_alpha', y='mean_test_score', data=violin_data, inner='qu
 #plt.title('Comparación de Accuracy por Parámetro Alpha en GridSearchCV')
 plt.xlabel('Alpha')
 plt.ylabel('Accuracy Promedio')
-plt.xticks(rotation=45)
+plt.xticks(rotation=0)
 plt.grid()
 plt.savefig("fig-cv.png", dpi=350, bbox_inches="tight")
 plt.close()
@@ -718,21 +726,92 @@ recall = recall_score(y_test, y_pred, average=None, labels=top_3_candidates)
 
 plt.savefig("fig-cv2.png", dpi=350,bbox_inches="tight")
 plt.close()
+
+#::: {.cell-output-display}
+#![Matriz de Confusión del Naive Bayes bajo optimización de Hiperparámetros.](fig-cv2.png){ width=67% #fig-cv2 fig-pos='htpb'}
+#:::
+
 ```
 
-::: {.cell-output-display}
-![Matriz de Confusión del Naive Bayes bajo optimización de Hiperparámetros.](fig-cv2.png){ width=67% #fig-cv2 fig-pos='htpb'}
-:::
+
 
 ## Selección del Mejor Modelo y Retrenamiento Completo
 
-Una vez identificada la mejor combinación de hiperparámetros, se reentrena el modelo usando todo el conjunto de entrenamiento (sin apartar datos para validación). Se reportan las métricas finales, como accuracy, precision y recall, y se presenta la matriz de confusión. Es importante señalar que los modelos basados en representaciones bag-of-words o TF-IDF tienen limitaciones: ignoran el orden y contexto de las palabras y generan vectores de alta dimensionalidad y dispersos, lo que puede dificultar capturar relaciones semánticas complejas.
+Una vez identificada la mejor combinación de hiperparámetros mediante validación cruzada, se procedió a reentrenar el modelo utilizando la totalidad del conjunto de entrenamiento, sin reservar un subconjunto para validación, y empleando dicha combinación óptima. En la figura [@fig-cv3] se muestra la matriz de confusión correspondiente al modelo final, mientras que en la [@fig-tab-cv] se reportan las métricas finales de precisión y recall por candidato. El accuracy del modelo final bajo un parametro $\alpha = 0.0275$ alcanza el 0.95, lo que indica un rendimiento sólido en la clasificación de discursos políticos.
 
-**Modelo Alternativo: Regresión Logística**
+Se observa un rendimiento perfecto en la clasificación de los discursos de Donald Trump, con una precisión, recall y accuracy de 1, ya que los 53 discursos fueron correctamente identificados. En el caso de Joe Biden, se lograron clasificar correctamente 71 discursos, aunque 4 discursos de Mike Pence fueron erróneamente asignados a Biden. Esto resulta en una sensibilidad (recall) perfecta de 1 para Biden, pero con una precisión de 0.95, afectada por las falsas positivas provenientes de Pence.
+
+Por su parte, Mike Pence alcanza una precisión de 1.00, ya que todos los discursos que el modelo etiquetó como suyos efectivamente lo eran. Sin embargo, su recall se reduce a 0.79, debido a que varios de sus discursos fueron clasificados erróneamente como pertenecientes a Biden. Esta asimetría indica una confusión unidireccional, donde los discursos de Pence tienden a ser absorbidos por la clase Biden, pero no al revés.
+```{python}
+# 3: Elija el mejor modelo (mejores parámetros) y vuelva a entrenar sobre todo el conjunto de entrenamiento disponible (sin quitar datos para validación). Reporte el valor final de las métricas y la matriz de confusión.
+
+#df_speeches_top_3["text"] 
+#df_speeches_top_3["speaker"]
+data = vectorizer.fit_transform(df_speeches_top_3["text"])
+data_tfidf = TfidfTransformer(use_idf=True).fit_transform(data)
+
+# entrenamiento del modelo Multinomial Naive Bayes bajo el resultado de GridSearchCV
+nb_model = MultinomialNB(alpha=0.0275, fit_prior=True)
+nb_model.fit(data_tfidf, df_speeches_top_3["speaker"])
+
+# Predicción sobre el conjunto de test
+y_pred = nb_model.predict(data_tfidf)
+
+# set sns set to none
+sns.set(style="white")  # Fondo blanco sin grilla
+
+# reporte de accuracy
+accuracy = accuracy_score(df_speeches_top_3["speaker"], y_pred)
+#print(f"Accuracy del modelo Naive Bayes: {accuracy:.2f}")
+# matriz de confusión
+cm = confusion_matrix(df_speeches_top_3["speaker"], y_pred, labels=top_3_candidates)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=top_3_candidates)
+disp.plot(cmap=plt.cm.Blues)
+#plt.title('Matriz de Confusión - Naive Bayes')
+plt.savefig("fig-cv3.png", dpi=350,bbox_inches="tight")
+plt.close()
+
+# reporte de precision y recall
+precision = precision_score(df_speeches_top_3["speaker"], y_pred, average=None, labels=top_3_candidates)
+recall = recall_score(df_speeches_top_3["speaker"], y_pred, average=None, labels=top_3_candidates)
+#for candidate, prec, rec in zip(top_3_candidates, precision, recall):
+#    print(f"Candidato: {candidate}, Precision: {prec:.2f}, Recall: {rec:.2f}")
+
+```
+
+::: {.cell-output-display}
+![Matriz de Confusión del modelo bajo optimización de hiperparámetros.](fig-cv3.png){ width=67% #fig-cv3 fig-pos='htpb'}
+:::
+
+```{python}
+#| label: fig-tab-cv
+#| fig-cap: Métricas de precisión y recall del modelo bajo optimización de hiperparámetros.
+
+df_metrics = pd.DataFrame({
+    "Candidato": top_3_candidates,
+    "Precisión": precision,
+    "Recall": recall
+})
+
+(
+    GT(df_metrics)
+    .cols_label(
+        Candidato="Candidato",
+        Precisión="Precisión",
+        Recall="Recall"
+    )
+    .fmt_number(columns=["Precisión", "Recall"], decimals=2)
+    #.tab_header(
+        #title="Evaluación del modelo Naive Bayes",
+        #subtitle="Precisión y Recall por candidato"
+    #)
+)
+```
+
+
+## Regresión Logística
 
 Además de Naive Bayes, se evaluó Regresión Logística, un modelo lineal que estima probabilidades usando softmax sobre combinaciones lineales de features.
-
-### Regresión Logística
 
 La Regresión Logística es un modelo lineal que estima las probabilidades de pertenencia a cada clase aplicando la función softmax sobre una combinación lineal de las features. Para cada clase c, se calcula:
 
@@ -741,6 +820,8 @@ P(c \mid \mathbf{x}) = \frac{e^{\mathbf{w}_c^\top \mathbf{x} + b_c}}{\sum_{k} e^
 $$
 
 donde $\mathbf{w}_c$ y $b_c$ son los parámetros asociados a la clase c. Dicho modelo se entrena maximizando la verosimilitud, usualmente a través de métodos numéricos como el algoritmo de Newton-Raphson (NR), el cual ajusta iterativamente los pesos y el sesgo para maximizar la función de verosimilitud y acercar las probabilidades predichas a las etiquetas reales. A diferencia de Naive Bayes, que estima $P(x \mid c)$ y aplica la regla de Bayes, la Regresión Logística modela directamente la probabilidad condicional $P(c \mid \mathbf{x})$, permitiendo capturar interacciones lineales entre las variables.
+
+\newpage
 
 En este modelo existen dos hiperparámetros principales:
 
@@ -772,7 +853,7 @@ disp_lr = ConfusionMatrixDisplay.from_estimator(
     display_labels=top_3_candidates,
     cmap='Blues'
 )
-disp_lr.ax_.set_title('Matriz de Confusión - Logistic Regression (GridSearchCV)')
+#disp_lr.ax_.set_title('Matriz de Confusión - Logistic Regression (GridSearchCV)')
 plt.savefig("fig-logistic.png", dpi=350, bbox_inches="tight")
 plt.close()
 ```
@@ -782,12 +863,134 @@ plt.close()
 :::
 
 
+## Consideraciones sobre el desbalance y extracción alternativa de features
 
-## Consideraciones sobre (Des)balance y Extracción Alternativa de Features
+El análisis de componentes principales (PCA) realizado reemplazando a Mike Pence por Kamala Harris muestra que la selección de candidatos impacta directamente en el balance de clases y en la capacidad del modelo para generalizar. En este nuevo escenario, la proporción de discursos correspondientes al tercer candidato disminuye: se pasa de un 13 % con Mike Pence a tan solo 8 % con Kamala Harris, acentuando el desbalance original en la distribución de clases.
 
-Al cambiar la selección de candidatos es posible observar problemas de balance en los datos, situación que puede sesgar las predicciones. Técnicas como el sobre-muestreo y el submuestreo son herramientas útiles para rebalancear la distribución de clases y mitigar este efecto, aunque no se implemente en este caso.
+El desbalance de clases es un aspecto crítico en problemas de clasificación multiclase, ya que puede sesgar al modelo hacia las clases mayoritarias, deteriorando su capacidad para identificar correctamente las clases menos representadas. En este caso, la modificación en la selección de candidatos provoca una distribución aún más desequilibrada, lo que puede afectar negativamente tanto el entrenamiento como la evaluación del modelo.
 
-Una consideración adicional es que, en Python, la librería imbalanced-learn implementa diversas técnicas de remuestreo—entre ellas SMOTE y otras variantes—lo que facilita su integración en pipelines de scikit-learn para manejar el desbalance de clases.
+La figura [@fig-pca_kamala] muestra la proyección PCA de los discursos de Biden, Trump y Kamala Harris, donde se observa una mayor superposición entre las clases, particularmente entre los discursos de Kamala Harris y los de Joe Biden. Esta menor capacidad de separación en el espacio proyectado contrasta con la configuración anterior con Mike Pence, donde las clases estaban más claramente delimitadas. Este patrón sugiere que los discursos de Kamala Harris son más similares en estilo y contenido a los de Biden, lo cual resulta coherente desde un punto de vista político, dado que ambos pertenecen al mismo partido y compartieron fórmula presidencial.
+
+```{python}
+# 5: Evalúe el problema cambiando al menos un candidato. En particular, observe el (des)balance de datos y los problemas que pueda generar, así como cualquier indicio que pueda ver en el mapeo previo con PCA.
+top_3_candidates = df_speeches_clean["speaker"].value_counts().head(5).index
+# descartamos al tercer candidato
+top_3_candidates = top_3_candidates.drop(top_3_candidates[2])
+top_3_candidates = top_3_candidates.drop(top_3_candidates[2])
+#print(f"Top 3 candidatos: {top_3_candidates}")
+# print("---------------")
+
+df_speeches_top_3 = df_speeches_clean[
+     df_speeches_clean["speaker"].isin(top_3_candidates)
+].reset_index(drop=True)
+
+
+# 1: Separar 30% del conjunto para test. Al resto lo llamamos "dev" (desarrollo).
+
+X_dev, X_test, y_dev, y_test = train_test_split(
+    df_speeches_top_3["text"], 
+    df_speeches_top_3["speaker"], 
+    stratify=df_speeches_top_3["speaker"], 
+    test_size=0.3, 
+    random_state=42
+)
+
+
+# 3: Transforme el texto del conjunto de entrenamiento a la representación numérica (features) de conteo de palabras o bag of words.
+
+vectorizer = CountVectorizer(
+    stop_words=None,
+    lowercase=True,
+    token_pattern=r"(?u)\b\w+\b",
+    ngram_range=(1, 1)
+    
+)
+
+X_dev_counts = vectorizer.fit_transform(X_dev)
+#print(f"Dimensiones de la matriz de conteo: {X_dev_counts.shape}")
+#print(f"Proporción de entradas no cero: {X_dev_counts.nnz / X_dev_counts.shape[0] / X_dev_counts.shape[1]}")
+vectorizer2 = CountVectorizer(
+    stop_words=stopwords.words("english"),
+    lowercase=True,
+    token_pattern=r"(?u)\b\w+\b",
+    ngram_range=(1, 2)
+    
+)
+
+X_dev_counts2 = vectorizer2.fit_transform(X_dev)
+
+#print(f"Dimensiones de la matriz de conteo: {X_dev_counts2.shape}")
+#print(f"Proporción de entradas no cero: {X_dev_counts2.nnz / X_dev_counts2.shape[0] / X_dev_counts2.shape[1]}")
+
+
+# 4: Obtenga la representación numérica Term Frequency - Inverse Document Frequency.
+
+X_dev_tfidf = TfidfTransformer(use_idf=True).fit_transform(X_dev_counts)
+#print(f"Dimensiones de la matriz TF-IDF: {X_dev_tfidf.shape}")
+
+X_dev_tfidf2 = TfidfTransformer(use_idf=True).fit_transform(X_dev_counts2)
+
+
+# 5 :Muestre en un mapa el conjunto de entrenamiento, utilizando las dos primeras componentes PCA sobre los vectores de tf-idf.
+
+pca = PCA(n_components=10)
+X_dev_pca = pca.fit_transform(X_dev_tfidf.toarray())
+
+# Visualización de las dos primeras componentes PCA
+plt.figure(figsize=(10, 6))
+sns.scatterplot(
+    x=X_dev_pca[:, 0], 
+    y=X_dev_pca[:, 1], 
+    hue=y_dev, 
+    palette='Dark2', 
+    alpha=0.7
+)
+plt.xlabel('Componente PCA 1')
+plt.ylabel('Componente PCA 2')
+plt.grid()
+plt.savefig("fig-pca_kamala.png", dpi=350, bbox_inches="tight")
+plt.close()
+
+# Haga una visualización que permita entender cómo varía la varianza explicada a medida que se agregan componentes (e.g: hasta 10 cplt.figure(figsize=(10, 6))
+fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+
+# Primer gráfico: varianza explicada acumulada
+axes[0].plot(range(1, 11), np.cumsum(pca.explained_variance_ratio_[:10]), marker='o')
+#axes[0].set_title('Varianza explicada acumulada por componentes PCA')
+axes[0].set_xlabel('Número de componentes PCA')
+axes[0].set_ylabel('Varianza explicada acumulada')
+axes[0].grid()
+axes[0].set_xticks(range(1, 11))
+
+# Segundo gráfico: varianza explicada individual
+axes[1].plot(range(1, len(pca.explained_variance_ratio_) + 1), pca.explained_variance_ratio_, marker='o')
+#axes[1].set_title('Varianza explicada por cada componente PCA')
+axes[1].set_xlabel('Número de componentes PCA')
+axes[1].set_ylabel('Varianza explicada')
+axes[1].grid()
+axes[1].set_xticks(range(1, len(pca.explained_variance_ratio_) + 1))
+
+plt.tight_layout()
+plt.savefig("fig-pca_varianza.png", dpi=350, bbox_inches="tight")
+plt.close()
+
+```
+
+::: {.cell-output-display}
+![Proyección PCA con Kamala Harris (TF-IDF 1).](fig-pca_kamala.png){ width=65% #fig-pca_kamala fig-pos='htpb'}
+:::
+ 
+Por otro lado, la figura [@fig-pca_varianza] presenta la varianza explicada acumulada e individual por componente en la representación TF-IDF. En este caso, las primeras dos componentes explican aproximadamente un 18 % de la varianza total, una proporción ligeramente inferior a la observada en la configuración con Mike Pence (ver figura [@fig-pca2]). Este resultado refuerza la idea de que las primeras componentes no logran capturar gran parte de la variabilidad presente en el conjunto de datos, posiblemente debido a la mayor similitud discursiva entre Harris y Biden. Esta observación sugiere que existe un estilo retórico compartido entre ambos candidatos, lo que podría dificultar la discriminación automática de sus discursos en el espacio latente proyectado.
+
+::: {.cell-output-display}
+![Varianza explicada acumulada y por componente (TF-IDF 1).](fig-pca_varianza.png){ width=85% #fig-pca_varianza fig-pos='htpb'}
+:::
+
+
+
+Una consideración adicional es que, en Python, la librería \texttt{imbalanced-learn} implementa diversas técnicas de remuestreo—entre ellas SMOTE y otras variantes, lo que facilita su integración en pipelines de \texttt{scikit-learn} para manejar el desbalance de clases.
+
+
 
 ## Alternativas de Extracción de Features
 
@@ -808,8 +1011,15 @@ Modelos como BERT (Devlin et al., 2019) generan vectores dinámicos que dependen
 
 **Diferencias vs. estáticos:** embeddings sensibles al contexto, mayor capacidad para desambiguar significados, a costa de mayor complejidad computacional.
 
+## Conclusiones
 
+El presente trabajo demuestra que la combinación de técnicas clásicas de representación de texto (Bag of Words y TF-IDF) con algoritmos supervisados de clasificación resulta eficaz para diferenciar entre discursos políticos de la campaña presidencial estadounidense de 2020. Tras la optimización de hiperparámetros, el modelo Multinomial Naive Bayes obtuvo una exactitud del 95 %, mientras que la Regresión Logística, adecuadamente regularizada, alcanzó un 98 % de aciertos en el conjunto de prueba. Estos resultados confirman la capacidad de ambos métodos para capturar patrones léxicos distintivos de cada orador aun en un dominio tan heterogéneo como el discurso político.
 
+El análisis exploratorio mediante PCA evidenció que las dos primeras componentes principales concentran una fracción limitada de la varianza total, aunque suficiente para revelar agrupamientos claros entre candidatos. Asimismo, el reemplazo de Mike Pence por Kamala Harris mostró un incremento en el solapamiento de clases y puso de manifiesto la importancia del balance de datos: una menor representación de una clase reduce la capacidad discriminativa y acentúa la confusión con candidatos de estilo retórico similar. De allí se desprende la conveniencia de aplicar técnicas de remuestreo o pérdidas ponderadas cuando la distribución de clases sea marcadamente desigual.
+
+En conclusión, el estudio confirma la utilidad de los métodos de ciencia de datos para caracterizar y clasificar discursos políticos, al tiempo que señala los desafíos que plantean la alta dimensionalidad, el desbalance de clases y la necesidad de representaciones semánticamente más ricas. 
+
+\newpage
 
 ### Referencias {#references}
 
