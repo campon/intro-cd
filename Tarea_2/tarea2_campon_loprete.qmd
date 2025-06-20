@@ -273,11 +273,13 @@ En otras palabras, cada documento se representa como un vector de conteo de pala
 
 Se transforma el conjunto de entrenamiento de dos maneras:
 
-a. Unigramas incluyendo stopwords
+a. **Unigramas incluyendo stopwords**.
+
 No se eliminan palabras vacías (stopwords), por lo que el vocabulario es más amplio pero contiene muchas palabras con poca capacidad discriminativa. Entre los 100 discursos existen 13.704 palabras únicas (unigramas) en el corpus. La matriz resultante tiene una proporción de entradas no nulas: ~0.0889.
 
 
-b. Unigramas + bigramas, excluyendo stopwords en inglés
+b. **Unigramas + bigramas, excluyendo stopwords en inglés**.
+
 Se remueven stopwords usando la lista estándar del idioma inglés y se incluyen también combinaciones de dos palabras (bigramas), lo cual expande el tamaño del vocabulario pero aporta información contextual más rica. La dimensión de la matriz resulta en los 100 discursos, 197.501 combinaciones de bigramas — es decir, un vocabulario muchísimo más grande al incorporar combinaciones de dos palabras. La matriz resultante tiene una proporción de entradas no nulas: ~0.0197.
 
 A pesar del alto número de columnas (features), cada documento contiene solo un pequeño subconjunto del vocabulario total, por lo que la mayoría de las entradas de la matriz son ceros. Por esta razón, la matriz resultante es una matriz dispersa y para ahorrar memoria y acelerar los cálculos son almacenadas guardando únicamente las entradas no nulas. De hecho, en el caso del vectorizador con unigramas y bigramas, la matriz tiene casi 200 mil columnas, pero menos del 2% de sus celdas contienen información distinta de cero. En el primer caso, con unigramas y stopwords, la matriz tiene más de 13 mil columnas, pero menos del 9% de sus celdas contienen información distinta de cero.
@@ -943,15 +945,21 @@ sns.scatterplot(
     y=X_dev_pca[:, 1], 
     hue=y_dev, 
     palette='Dark2', 
-    alpha=0.7
+    alpha=0.7,
+    s=60
 )
-plt.xlabel('Componente PCA 1')
-plt.ylabel('Componente PCA 2')
-plt.grid()
+plt.xlabel('Componente 1', fontsize=11)
+plt.ylabel('Componente 2', fontsize=11)
+plt.legend(title='Candidato', fontsize=9, title_fontsize=10)
+plt.xticks(fontsize=9)
+plt.yticks(fontsize=9)
+plt.grid(alpha=0.3)
+sns.despine()
+plt.tight_layout()
 plt.savefig("fig-pca_kamala.png", dpi=350, bbox_inches="tight")
 plt.close()
 
-# Haga una visualización que permita entender cómo varía la varianza explicada a medida que se agregan componentes (e.g: hasta 10 cplt.figure(figsize=(10, 6))
+# Haga una visualización que permita entender cómo varía la varianza explicada a medida que se agregan componentes (e.g: hasta 10 componentes).
 fig, axes = plt.subplots(1, 2, figsize=(12, 6))
 
 # Primer gráfico: varianza explicada acumulada
