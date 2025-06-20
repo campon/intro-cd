@@ -56,7 +56,7 @@ df_speeches = pd.read_csv('../data/us_2020_election_speeches.csv')
 
 ## Introducción
 
-Este análisis explora 269 discursos políticos recogidos durante la campaña presidencial de Estados Unidos en 2020. Se han seleccionado los cinco oradores con mayor cantidad de intervenciones (Joe Biden, Donald Trump, Mike Pence, Bernie Sanders y Kamala Harris) tras confirmar, mediante una revisión automatizada y manual, que los datos son lo suficientemente completos y homogéneos para un estudio riguroso de patrones de publicación y análisis textual.
+En este trabajo se explora 269 discursos políticos recogidos durante la campaña presidencial de Estados Unidos en 2020. Se han seleccionado los cinco oradores con mayor cantidad de intervenciones (Joe Biden, Donald Trump, Mike Pence, Bernie Sanders y Kamala Harris) tras confirmar, mediante una revisión automatizada y manual, que los datos son lo suficientemente completos y homogéneos para un estudio riguroso de patrones de publicación y análisis textual.
 
 La base de datos incluye seis variables: tres categóricas (*speaker*, *type*, *location*), dos de texto (*title*, *text*) y una temporal (*date*). Los registros comprenden intervenciones realizadas entre el 15 de enero y el 16 de octubre de 2020. Para preparar el corpus se implementó una función de limpieza que:
 
@@ -321,7 +321,7 @@ El vector TF-IDF para **Documento 1** sería:
 
 - ["el": 0, "gato": 0.301, "come": 0, "pescado": 0.301, "perro": 0, "carne": 0]
 
-**Y para Documento 2**:
+**Mientras que para Documento 2**:
 
 - ["el": 0, "gato": 0, "come": 0, "pescado": 0, "perro": 0.301, "carne": 0.301]
 
@@ -526,7 +526,7 @@ Una vez obtenida la representación numérica de los discursos mediante la trans
 
 En este caso se utiliza el modelo **Naive Bayes Multinomial**, ampliamente utilizado en tareas de clasificación de texto por su simplicidad, rapidez y buenos resultados incluso con datos ruidosos o de alta dimensión.
 
-El modelo se basa en el **Teorema de Bayes** [@urafsky2023speech], que permite estimar la probabilidad de una clase $c$ dado un documento $d$:
+El modelo se basa en el **Teorema de Bayes** [@jurafsky2023speech], que permite estimar la probabilidad de una clase $c$ dado un documento $d$:
 
 $$
 P(c \mid d) = \frac{P(c) \cdot P(d \mid c)}{P(d)}
@@ -653,7 +653,7 @@ El accuracy del modelo sobre el conjunto de test resulta en un bajo valor de 0.4
 
 ## Validación Cruzada y Búsqueda de Hiperparámetros
 
-La validación cruzada (cross-validation) es una técnica utilizada para evaluar el desempeño de un modelo dividiendo el conjunto de datos en k subconjuntos o folds. En cada iteración, el modelo se entrena sobre k – 1 folds y se evalúa en el fold restante. Al promediar las métricas obtenidas en las k repeticiones, se obtiene una estimación más robusta del rendimiento del modelo, lo que permite mitigar el riesgo de sobreajuste asociado a depender de un único conjunto de validación. En nuestro caso, se utilizó una validación cruzada con k=10.
+La validación cruzada (cross-validation) es una técnica utilizada para evaluar el desempeño de un modelo dividiendo el conjunto de datos en k subconjuntos o folds. En cada iteración, el modelo se entrena sobre $k – 1$ folds y se evalúa en el fold restante. Al promediar las métricas obtenidas en las k repeticiones, se obtiene una estimación más robusta del rendimiento del modelo, lo que permite mitigar el riesgo de sobreajuste asociado a depender de un único conjunto de validación. En este caso, se utilizó una validación cruzada con k=10.
 
 Para optimizar los hiperparámetros del modelo, se utilizó la herramienta $\texttt{GridSearchCV}$, que permite explorar de forma sistemática todas las combinaciones posibles dentro de un espacio de parámetros definido. En cada iteración de la validación cruzada, se evalúa una combinación específica de hiperparámetros, y es posible visualizar la distribución de una métrica (como el accuracy) mediante un gráfico de violín, el cual muestra el valor promedio y la variabilidad del rendimiento entre los distintos folds.
 
@@ -741,7 +741,7 @@ Una vez identificada la mejor combinación de hiperparámetros mediante validaci
 
 Se observa un rendimiento perfecto en la clasificación de los discursos de Donald Trump, con una precisión, recall y accuracy de 1, ya que los 53 discursos fueron correctamente identificados. En el caso de Joe Biden, se lograron clasificar correctamente 71 discursos, aunque 4 discursos de Mike Pence fueron erróneamente asignados a Biden. Esto resulta en una sensibilidad (recall) perfecta de 1 para Biden, pero con una precisión de 0.95, afectada por las falsas positivas provenientes de Pence.
 
-Por su parte, Mike Pence alcanza una precisión de 1.00, ya que todos los discursos que el modelo etiquetó como suyos efectivamente lo eran. Sin embargo, su recall se reduce a 0.79, debido a que varios de sus discursos fueron clasificados erróneamente como pertenecientes a Biden. Esta asimetría indica una confusión unidireccional, donde los discursos de Pence tienden a ser absorbidos por la clase Biden, pero no al revés.
+Por su parte, Mike Pence alcanza una precisión de 1.00, ya que todos los discursos que el modelo etiquetó como suyos efectivamente lo eran. Sin embargo, su recall se reduce a 0.79, debido a que varios de sus discursos fueron clasificados erróneamente como pertenecientes a Biden. Esta asimetría indica una confusión unidireccional, donde los discursos de Pence tienden a ser absorbidos por los discursos de Biden, pero no al revés.
 ```{python}
 # 3: Elija el mejor modelo (mejores parámetros) y vuelva a entrenar sobre todo el conjunto de entrenamiento disponible (sin quitar datos para validación). Reporte el valor final de las métricas y la matriz de confusión.
 
@@ -997,17 +997,17 @@ Una consideración adicional es que, en Python, la librería \texttt{imbalanced-
 En el ámbito del procesamiento de lenguaje natural, existen diversas técnicas para representar texto como vectores numéricos. A continuación se describen algunas de las más relevantes:
 
 ### Word2Vec
-Word2Vec (Mikolov et al., 2013) aprende vectores densos de palabras mediante modelos de Continuous Bag-of-Words (CBOW) o Skip-Gram, optimizando la predicción de palabras y su contexto. Cada palabra se representa como un vector de dimensión fija, donde la cercanía en el espacio refleja similitud semántica.
+Word2Vec [@mikolov2013distributed] aprende vectores densos de palabras mediante modelos de Continuous Bag-of-Words (CBOW) o Skip-Gram, optimizando la predicción de palabras y su contexto. Cada palabra se representa como un vector de dimensión fija, donde la cercanía en el espacio refleja similitud semántica.
 
 **Diferencias vs. BoW/TF-IDF:** reducción de dimensionalidad, vectores densos que capturan relaciones semánticas y mejor generalización.
 
 ### GloVe
-GloVe (Pennington et al., 2014) crea embeddings a partir de la factorización de una matriz de co-ocurrencia global de palabras. Los vectores resultantes preservan información tanto local (contexto de ventana) como global (distribución en el corpus).
+GloVe [@pennington2014glove] crea embeddings a partir de la factorización de una matriz de co-ocurrencia global de palabras. Los vectores resultantes preservan información tanto local (contexto de ventana) como global (distribución en el corpus).
 
 **Diferencias vs. Word2Vec:** incorpora estadísticas globales del corpus, lo que puede mejorar la representación de palabras infrecuentes; sigue siendo estático.
 
 ### Embeddings Contextuales
-Modelos como BERT (Devlin et al., 2019) generan vectores dinámicos que dependen del contexto completo de la frase. Cada instancia de una palabra recibe un embedding distinto según su uso, capturando matices sintácticos y semánticos más profundos.
+Modelos como BERT [@devlin2019bert] generan vectores dinámicos que dependen del contexto completo de la frase. Cada instancia de una palabra recibe un embedding distinto según su uso, capturando matices sintácticos y semánticos más profundos.
 
 **Diferencias vs. estáticos:** embeddings sensibles al contexto, mayor capacidad para desambiguar significados, a costa de mayor complejidad computacional.
 
