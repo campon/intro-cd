@@ -16,6 +16,21 @@ pdf-engine: lualatex
 
 ```{python}
 #| echo: false
+#| eval: false
+
+
+import kagglehub
+
+path = kagglehub.dataset_download("manchunhui/us-election-2020-tweets")
+
+import zipfile
+with zipfile.ZipFile(path, 'r') as zip_ref:
+    zip_ref.extractall("us-election-2020-tweets")
+
+```
+
+```{python}
+#| echo: false
 
 import polars as pl
 
@@ -163,13 +178,13 @@ plt.close()
 :::
 
 
-Este conjunto de datos permite identificar claramente los picos de actividad correlacionados con eventos específicos de la campaña electoral, como se observa en los debates presidenciales y crisis mediáticas. Esta granularidad temporal será fundamental para entender cómo los eventos políticos influyen en la conversación digital y el engagement de los usuarios.
+Este conjunto de datos permite identificar claramente los picos de actividad relacionados con eventos específicos de la campaña electoral, como se observa en los debates presidenciales y crisis mediáticas. Esta granularidad temporal será fundamental para entender cómo los eventos políticos influyen en la conversación digital y el engagement de los usuarios.
 
 ## Planteamiento del problema
 
 Con este conjunto de datos, nos planteamos investigar cómo evolucionó el discurso político en Twitter durante los últimos meses de la campaña electoral de 2020. La pregunta central que guía nuestro análisis es: **¿De qué manera se diferenció la dinámica de engagement y actividad temporal entre los candidatos, y qué eventos específicos marcaron puntos de inflexión en la conversación digital?**
 
-Esta investigación se enfoca en cuatro aspectos complementarios. Primero, queremos identificar si existieron momentos específicos durante la campaña donde la actividad en Twitter experimentó picos significativos, particularmente en relación con eventos como debates presidenciales, anuncios de políticas importantes o crisis mediáticas. El análisis temporal nos permitirá detectar estos patrones y correlacionarlos con el calendario electoral.
+Esta investigación se enfoca en cuatro aspectos complementarios. Primero, queremos identificar si existieron momentos específicos durante la campaña donde la actividad en Twitter experimentó picos significativos, particularmente en relación con eventos como debates presidenciales, anuncios de políticas importantes o crisis mediáticas. El análisis temporal nos permitirá detectar estos patrones y relacionarlos con el calendario electoral.
 
 Segundo, nos interesa examinar las diferencias en el nivel de engagement que generaron los contenidos relacionados con cada candidato. Esto incluye no solo el volumen de tweets, sino también métricas como retweets y likes, que nos indicarían el nivel de resonancia que tuvo cada mensaje en la audiencia. También exploraremos si existe una correlación entre el número de seguidores de los usuarios y el impacto de sus tweets.
 
@@ -181,9 +196,7 @@ Finalmente, en caso de contar con datos de geolocalización suficientes, examina
 
 Para abordar estas preguntas de investigación, seguiríamos un proceso metodológico estructurado en varias etapas. Primero, realizaríamos un análisis exploratorio exhaustivo de los datos para comprender mejor su estructura y calidad, identificando patrones temporales básicos y detectando posibles problemas de completitud o consistencia.
 
-En la etapa de análisis temporal, aplicaríamos técnicas de series de tiempo para examinar la evolución diaria y semanal de la actividad en Twitter. Esto incluiría la creación de visualizaciones como gráficos de líneas temporales y mapas de calor para identificar picos de actividad. Para correlacionar estos picos con eventos específicos, cruzaríamos nuestros hallazgos con un calendario electoral detallado que incluya fechas de debates, anuncios importantes y crisis mediáticas.
-
-Para el análisis de engagement, calcularíamos métricas agregadas como promedios de retweets y likes por tweet, segmentadas por candidato y período temporal. Utilizaríamos técnicas de correlación y regresión para examinar la relación entre características del usuario (como número de seguidores) y el impacto de sus tweets.
+En la etapa de análisis temporal, aplicaríamos técnicas de series de tiempo para examinar la evolución diaria y semanal de la actividad en Twitter. Esto incluiría la creación de visualizaciones como gráficos de líneas temporales y mapas de calor para identificar picos de actividad. Para poder relacionar estos picos con eventos específicos, cruzaríamos nuestros hallazgos con un calendario electoral detallado que incluya fechas de debates, anuncios importantes y crisis mediáticas.
 
 El análisis de contenido textual emplearía técnicas como TF-IDF para identificar términos característicos de cada candidato, y explorar en algoritmos de modelado de tópicos como LDA (Latent Dirichlet Allocation) o BERTopic (BERT Topic Modeling) para descubrir temas recurrentes. Para el análisis de sentimientos, implementaríamos herramientas como VADER o modelos pre-entrenados en tanto en español como inglés, etiquetaríamos una muestra representativa de tweets manualmente para validar los resultados y ajustar los modelos según sea necesario.
 

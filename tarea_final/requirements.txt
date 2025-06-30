@@ -1,0 +1,7 @@
+jupyter
+kagglehub
+pandas
+matplotlib
+seaborn
+polars
+missingno
