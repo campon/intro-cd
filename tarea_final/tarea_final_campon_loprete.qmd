@@ -1,0 +1,214 @@
+---
+title: Tarea final
+subtitle: Tarea final - Introducción a la Ciencia de Datos - FING 2025
+author: Ignacio Campón y Mauro Loprete
+jupyter: python3
+execute:
+  echo: false
+  message: false
+  warning: false
+format: pdf
+lang: es
+nocite: '@*'
+link-citations: true
+pdf-engine: lualatex
+---
+
+```{python}
+#| echo: false
+
+import polars as pl
+
+trump = pl.read_csv("us-election-2020-tweets/hashtag_donaldtrump.csv")
+trump = trump.with_columns(pl.lit('Trump').alias('source'))
+
+biden = pl.read_csv("us-election-2020-tweets/hashtag_joebiden.csv")
+biden = biden.with_columns(pl.lit('Biden').alias('source'))
+
+full_data = pl.concat([trump, biden])
+
+# Plot the number of tweets by source with Seaborn
+import seaborn as sns
+import matplotlib.pyplot as plt
+sns.set_theme(style="whitegrid")
+plt.figure(figsize=(10, 6))
+
+# Count tweets by source
+tweet_counts = full_data.group_by('source').agg(pl.count().alias('count'))
+
+# Create bar plot
+sns.barplot(data=tweet_counts.to_pandas(), x='source', y='count', palette='viridis')
+plt.title('Número de tweets por fuente')
+plt.xlabel('Fuente')
+plt.ylabel('Número de tweets')
+
+for i, v in enumerate(tweet_counts.select('count').to_numpy().flatten()):
+    plt.text(i, v + 1000, f'{v:,}', ha='center', va='bottom', fontweight='bold')
+
+plt.tight_layout()
+plt.savefig("tweets_by_source.png", dpi=350)
+plt.close()
+```
+
+## Introducción
+
+
+Para esta tarea final, se utilizará el conjunto de datos referido a los tweets referidos a la elección presidencial de los Estados Unidos de 2020, para continuar con la temática analizada en la tarea 1 y 2. Este conjunto de datos se encuentra disponible de forma pública en la plataforma [Kaggle](https://www.kaggle.com/datasets/manchunhui/us-election-2020-tweets).
+
+Esta tarea final complementa los análisis previos aplicando las herramientas y conceptos desarrollados en las tareas anteriores a un nuevo contexto de datos. Mientras que en la Tarea 1 se exploró el pipeline de ciencia de datos y la calidad de datos utilizando discursos presidenciales, y en la Tarea 2 se profundizó en técnicas de procesamiento de texto y modelado predictivo, esta tarea final extiende el análisis al ámbito de las redes sociales durante el mismo período electoral. De esta manera, se obtiene una perspectiva más completa del discurso político en 2020, combinando tanto las comunicaciones oficiales (discursos) como las conversaciones públicas (tweets), y permitiendo evaluar la consistencia y aplicabilidad de las metodologías de ciencia de datos en diferentes tipos de datos textuales. 
+
+Los tweets fueron extraídos por el usuario con la API de Twitter buscando por los hashtags `#JoeBiden`, `#Biden`, `Trump` y `DonaldTrump` entre el 15 de Noviembre de 2020 y el 8 de Octubre de 2020, en total se tiene un total 
+de 1.747.805 de tweets, donde Trump tiene una mayoría de tweets respecto a Biden como se observa en la figura [@fig-tweets-by-source]. 
+
+Al momento de la extracción de los datos, en el año 2020, la API de Twitter (v1.1) ofrecía acceso gratuito a través de un modelo de autenticación simple (OAuth 1.0a), que permitía consultar endpoints públicos como la búsqueda de tweets recientes, la línea de tiempo de un usuario y metadatos asociados (retweets, likes, ubicación, idioma, etc.). Este acceso era limitado por una política de rate limits, pero sin requerir suscripciones pagas para usos académicos o personales.
+
+En contraste, a partir de 2023, tras los cambios en la política de acceso bajo la nueva gestión de Twitter (X), la API pasó a ofrecerse bajo un modelo mayoritariamente pago. La versión gratuita actual es extremadamente restringida (por ejemplo, 500 tweets al mes) y ya no permite búsquedas avanzadas. El acceso a volúmenes mayores o funcionalidades clave (como búsqueda histórica, engagement o seguimiento en tiempo real) requiere suscripciones mensuales, incluso para cuentas académicas. Además, la API v1.1 fue deprecada y reemplazada por la v2, con una arquitectura y esquema de autenticación distintos.
+
+Esto es algo a considerar si se desea replicar el análisis en el futuro o realizar nuevos análisis sobre datos de Twitter, este tipo de extracción de datos tenia una calidad relativamente buena y permitía obtener una gran cantidad de tweets.
+
+## Descripción de los datos
+
+
+- `created_at`: Fecha y hora de creación del tweet.
+- `tweet_id`: Identificador único del tweet.
+- `text`: Contenido del tweet.
+- `likes`: Cantidad de "me gusta" que recibió el tweet.
+- `retweet_count`: Cantidad de retweets que recibió el tweet.
+- `source`: Fuente desde la cual se publicó el tweet.
+- `user_id`: Identificador único del usuario que publicó el tweet.
+- `user_name`: Nombre del usuario que publicó el tweet.
+- `user_screen_name`: Nombre de usuario (handle) del usuario que publicó el tweet.
+- `user_description`: Descripción del usuario que publicó el tweet.
+- `user_join_date`: Fecha de creación de la cuenta del usuario.
+- `user_followers_count`: Cantidad de seguidores del usuario.
+- `user_location`: Ubicación del usuario.
+- `lat`: Latitud del tweet (si está disponible).
+- `long`: Longitud del tweet (si está disponible).
+- `city`: Ciudad del tweet (si está disponible).
+- `country`: País del tweet (si está disponible).
+- `continent`: Continente del tweet (si está disponible).
+- `state`: Estado del tweet (si está disponible).
+- `state_code`: Código del estado del tweet (si está disponible).
+- `collected_at`: Fecha y hora en que se recopiló el tweet.
+
+::: {.cell-output-display}
+![Distribución de tweets por Candidato](tweets_by_source.png){ width=65% #fig-tweets-by-source fig-pos='htpb'}
+:::
+
+La estructura de los datos es bastante consistente, pero es importante tener en cuenta que algunas columnas pueden contener valores nulos o no estar disponibles para todos los tweets, especialmente las relacionadas con la ubicación (`lat`, `long`, `city`, `country`, `continent`, `state`, `state_code`). Estas características fueron incluidas a partir de ciertas fechas en la extracción de los tweets, lo que puede afectar el análisis espacial de los mismos.
+
+Para analizar la calidad de los datos, se puede utilizar la librería `missingno` para visualizar los valores nulos en el conjunto de datos. Esto permite identificar rápidamente las columnas con mayor cantidad de datos faltantes, esto puede resumirse en la [@fig-missingno-tweets].
+
+```{python}
+#| echo: false
+#| fig-alt: "Visualización de datos faltantes en el conjunto de datos de tweets"
+#| fig-label: fig:missingno-tweets
+import missingno as msno
+import matplotlib.pyplot as plt
+msno.matrix(full_data.to_pandas())
+plt.savefig("missingno_tweets.png", dpi=350)
+plt.close()
+```
+
+::: {.cell-output-display}
+![Datos faltantes en el conjunto de datos de tweets](missingno_tweets.png){ width=65% #fig-missingno-tweets fig-pos='htpb'}
+:::
+
+
+Como se puede observar en la figura, la mayoría de las columnas tienen una cantidad significativa de datos, pero algunas columnas relacionadas con la ubicación (`lat`, `long`, `city`, `country`, `continent`, `state`, `state_code`) tienen una cantidad considerable de valores nulos. Esto es esperado ya que no todos los tweets contienen información de ubicación dependiendo de la configuración de privacidad del usuario y la disponibilidad de datos en el momento de la publicación. Además, se puede ver que la descripción del usuario (`user_description`) tiene una gran cantidad de datos nulos, lo cual puede ser normal ya que no todos los usuarios completan su perfil con una descripción.
+
+
+```{python}
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+import polars as pl
+
+# Asegurarse de que la columna sea datetime
+if full_data.schema['created_at'] == pl.Utf8:
+    full_data = full_data.with_columns(
+        pl.col('created_at').str.strptime(pl.Datetime, "%Y-%m-%d %H:%M:%S")
+    )
+
+# Agrupar por fecha, contar y acumular
+tweets_by_date = (
+    full_data
+    .with_columns(pl.col('created_at').dt.date().alias('date'))
+    .group_by('date')
+    .agg(pl.count().alias('tweet_count'))
+    .sort('date')
+    .with_columns(pl.cum_sum('tweet_count').alias('cumulative_count'))
+)
+
+# Plot
+plt.figure(figsize=(12, 6))
+sns.lineplot(
+    data=tweets_by_date.to_pandas(),
+    x='date', y='cumulative_count',
+    marker='o', linewidth=2
+)
+plt.title('Número acumulativo de tweets por fecha')
+plt.xlabel('Fecha')
+plt.ylabel('Número acumulativo de tweets')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.savefig("cumulative_tweets_by_date.png", dpi=350)
+plt.close()
+
+# Add line 
+```
+
+::: {.cell-output-display}
+![Cantidad de tweets acumulados por fecha](cumulative_tweets_by_date.png){ width=65% #fig-cumulative-tweets-by-date fig-pos='htpb'}
+:::
+
+
+Este conjunto de datos permite identificar claramente los picos de actividad correlacionados con eventos específicos de la campaña electoral, como se observa en los debates presidenciales y crisis mediáticas. Esta granularidad temporal será fundamental para entender cómo los eventos políticos influyen en la conversación digital y el engagement de los usuarios.
+
+## Planteamiento del problema
+
+Con este conjunto de datos, nos planteamos investigar cómo evolucionó el discurso político en Twitter durante los últimos meses de la campaña electoral de 2020. La pregunta central que guía nuestro análisis es: **¿De qué manera se diferenció la dinámica de engagement y actividad temporal entre los candidatos, y qué eventos específicos marcaron puntos de inflexión en la conversación digital?**
+
+Esta investigación se enfoca en cuatro aspectos complementarios. Primero, queremos identificar si existieron momentos específicos durante la campaña donde la actividad en Twitter experimentó picos significativos, particularmente en relación con eventos como debates presidenciales, anuncios de políticas importantes o crisis mediáticas. El análisis temporal nos permitirá detectar estos patrones y correlacionarlos con el calendario electoral.
+
+Segundo, nos interesa examinar las diferencias en el nivel de engagement que generaron los contenidos relacionados con cada candidato. Esto incluye no solo el volumen de tweets, sino también métricas como retweets y likes, que nos indicarían el nivel de resonancia que tuvo cada mensaje en la audiencia. También exploraremos si existe una correlación entre el número de seguidores de los usuarios y el impacto de sus tweets.
+
+El tercer aspecto se centra en el análisis del contenido mismo. Utilizando técnicas de procesamiento de lenguaje natural, buscaremos identificar los temas predominantes en las conversaciones sobre cada candidato y cómo estos evolucionaron a lo largo del tiempo. Además, implementaremos análisis de sentimientos para detectar patrones en las percepciones públicas expresadas en la plataforma.
+
+Finalmente, en caso de contar con datos de geolocalización suficientes, examinaremos si existen diferencias regionales en los patrones de actividad y engagement, lo que podría revelar concentraciones geográficas de apoyo o crítica hacia cada candidato.
+
+## Abordaje Metodológico
+
+Para abordar estas preguntas de investigación, seguiríamos un proceso metodológico estructurado en varias etapas. Primero, realizaríamos un análisis exploratorio exhaustivo de los datos para comprender mejor su estructura y calidad, identificando patrones temporales básicos y detectando posibles problemas de completitud o consistencia.
+
+En la etapa de análisis temporal, aplicaríamos técnicas de series de tiempo para examinar la evolución diaria y semanal de la actividad en Twitter. Esto incluiría la creación de visualizaciones como gráficos de líneas temporales y mapas de calor para identificar picos de actividad. Para correlacionar estos picos con eventos específicos, cruzaríamos nuestros hallazgos con un calendario electoral detallado que incluya fechas de debates, anuncios importantes y crisis mediáticas.
+
+Para el análisis de engagement, calcularíamos métricas agregadas como promedios de retweets y likes por tweet, segmentadas por candidato y período temporal. Utilizaríamos técnicas de correlación y regresión para examinar la relación entre características del usuario (como número de seguidores) y el impacto de sus tweets.
+
+El análisis de contenido textual emplearía técnicas como TF-IDF para identificar términos característicos de cada candidato, y explorar en algoritmos de modelado de tópicos como LDA (Latent Dirichlet Allocation) o BERTopic (BERT Topic Modeling) para descubrir temas recurrentes. Para el análisis de sentimientos, implementaríamos herramientas como VADER o modelos pre-entrenados en tanto en español como inglés, etiquetaríamos una muestra representativa de tweets manualmente para validar los resultados y ajustar los modelos según sea necesario.
+
+En caso de contar con datos geográficos suficientes, crearíamos visualizaciones cartográficas y análisis de concentración espacial para identificar patrones regionales. Todas las visualizaciones seguirían principios de diseño claro y comunicación efectiva, utilizando gráficos de barras, líneas temporales, nubes de palabras y mapas según corresponda.
+
+## Consideraciones éticas
+
+El análisis de datos provenientes de redes sociales como Twitter implica una serie de consideraciones éticas fundamentales que deben ser abordadas cuidadosamente para garantizar la integridad y responsabilidad del proyecto.
+
+**Privacidad de los datos:** Aunque los tweets analizados son públicos, es importante recordar que pueden contener información personal identificable, como nombres de usuario, ubicaciones o descripciones personales. El uso y publicación de estos datos debe respetar la privacidad de los individuos, evitando la exposición innecesaria de información sensible. Se recomienda anonimizar los datos en la medida de lo posible y abstenerse de divulgar identificadores directos en los resultados o visualizaciones. Además, se debe cumplir con los términos de servicio de Twitter y las regulaciones de protección de datos aplicables, como el GDPR en Europa o la CCPA en California, que establecen pautas claras sobre el manejo de datos personales.
+
+**Sesgos en los datos y algoritmos:** Los datos de Twitter no representan necesariamente a la población general, ya que los usuarios activos pueden tener características demográficas, geográficas o ideológicas particulares. Por ejemplo, puede existir un sesgo de auto-selección, donde los usuarios que participan activamente en discusiones políticas tienden a tener opiniones más polarizadas, o un predominio de ciertos grupos demográficos (como jóvenes o habitantes urbanos) que no reflejan a toda la sociedad. Esto puede introducir sesgos en los análisis y en la interpretación de los resultados; por ejemplo, se podrían sobreestimar opiniones extremas o subrepresentar a ciertos sectores de la población, lo que llevaría a conclusiones erróneas sobre la percepción general. Asimismo, los algoritmos de procesamiento de lenguaje natural (como análisis de sentimientos o clasificación temática) pueden amplificar sesgos existentes si no son cuidadosamente evaluados y ajustados; por ejemplo, pueden interpretar erróneamente el sarcasmo o favorecer ciertos patrones lingüísticos sobre otros. Es fundamental complementar con un análisis exploratorio para identificar posibles fuentes de sesgo y, si es posible, aplicar técnicas de balanceo o ponderación para mitigar su impacto.
+
+**Impacto potencial de los resultados:** Los resultados de este tipo de análisis pueden influir en la percepción pública, la toma de decisiones políticas o la cobertura mediática. Por ejemplo, una interpretación errónea de los datos podría contribuir a la difusión de desinformación, reforzar estereotipos o influir injustamente en la opinión pública y en procesos electorales. Por ello, es esencial comunicar las limitaciones del estudio de manera transparente, evitando afirmaciones categóricas o generalizaciones injustificadas. Se debe enfatizar que los hallazgos reflejan tendencias dentro de la plataforma analizada y no necesariamente la opinión de toda la sociedad.
+
+**Estrategias para identificar, evaluar y mitigar riesgos:**
+
+- Anonimizar los datos y limitar el acceso a información sensible.
+
+- Documentar y comunicar claramente las limitaciones y posibles sesgos de los datos y métodos utilizados.
+
+- Validar los algoritmos y revisar si existe sesgo en su desempeño.
+
+- Promover la transparencia en la metodología y permitir la reproducibilidad del análisis.
+
+En resumen, un enfoque ético en el análisis de datos de redes sociales requiere atención a la privacidad, la equidad y la transparencia, así como la adopción de medidas proactivas para minimizar riesgos y maximizar el beneficio social del proyecto.
+
+
